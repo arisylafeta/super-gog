@@ -3,9 +3,11 @@ package googleapi
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -269,6 +271,29 @@ func NewHTTPClientForScopes(ctx context.Context, serviceLabel, email string, sco
 	}
 
 	return &http.Client{Transport: transport}, nil
+}
+
+// AccessTokenForScopes returns a refreshed OAuth access token for an account.
+//
+// It is intended for a local child process that needs to call a Google API not
+// yet implemented by gog. Callers must treat the returned token as a secret and
+// must not log or persist it. The stored OAuth grant must already include every
+// requested scope.
+func AccessTokenForScopes(ctx context.Context, serviceLabel, email string, scopes []string) (string, time.Time, error) {
+	ts, err := tokenSourceForAvailableAccountAuthWithStoredScopeCheck(ctx, serviceLabel, email, scopes, true)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	token, err := ts.Token()
+	if err != nil {
+		return "", time.Time{}, fmt.Errorf("refresh access token: %w", err)
+	}
+	if token == nil || strings.TrimSpace(token.AccessToken) == "" {
+		return "", time.Time{}, errors.New("refresh access token: empty access token")
+	}
+
+	return token.AccessToken, token.Expiry, nil
 }
 
 func newBaseTransport() *http.Transport {

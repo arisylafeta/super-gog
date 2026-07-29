@@ -1052,6 +1052,21 @@ func TestOptionsForAccountScopes_RequiredStoredGrantAllowsDirectAccessToken(t *t
 	}
 }
 
+func TestAccessTokenForScopesUsesDirectTokenWithoutLoggingIt(t *testing.T) {
+	ctx := authclient.WithAccessToken(context.Background(), "ya29.test-access-token")
+
+	accessToken, expiry, err := AccessTokenForScopes(ctx, "external", "a@b.com", []string{"scope"})
+	if err != nil {
+		t.Fatalf("AccessTokenForScopes: %v", err)
+	}
+	if accessToken != "ya29.test-access-token" {
+		t.Fatalf("access token mismatch")
+	}
+	if !expiry.IsZero() {
+		t.Fatalf("direct access token expiry = %v, want zero", expiry)
+	}
+}
+
 func TestOptionsForAccountScopes_ServiceAccountPreferred(t *testing.T) {
 	ctx, serviceAccounts := testClientResolverContextWithServiceAccounts(t)
 	if _, err := serviceAccounts.Write("a@b.com", []byte(`{"type":"service_account"}`)); err != nil {
