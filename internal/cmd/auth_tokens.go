@@ -12,6 +12,7 @@ import (
 
 	"github.com/steipete/gogcli/internal/authclient"
 	"github.com/steipete/gogcli/internal/config"
+	"github.com/steipete/gogcli/internal/googleapi"
 	"github.com/steipete/gogcli/internal/outfmt"
 	"github.com/steipete/gogcli/internal/secrets"
 	"github.com/steipete/gogcli/internal/ui"
@@ -19,9 +20,40 @@ import (
 
 type AuthTokensCmd struct {
 	List   AuthTokensListCmd   `cmd:"" name:"list" help:"List stored tokens (by key only)"`
+	Access AuthTokensAccessCmd `cmd:"" name:"access" help:"Mint a short-lived access token for a local child process"`
 	Delete AuthTokensDeleteCmd `cmd:"" name:"delete" help:"Delete a stored refresh token"`
 	Export AuthTokensExportCmd `cmd:"" name:"export" help:"Export a refresh token to a file (contains secrets)"`
 	Import AuthTokensImportCmd `cmd:"" name:"import" help:"Import a refresh token file into keyring (contains secrets)"`
+}
+
+type AuthTokensAccessCmd struct {
+	Email string `arg:"" name:"email" help:"Email with an existing OAuth grant"`
+	Scope string `name:"scope" required:"" help:"OAuth scope required by the local child process"`
+}
+
+func (c *AuthTokensAccessCmd) Run(ctx context.Context, flags *RootFlags) error {
+	if !outfmt.IsJSON(ctx) {
+		return usage("auth tokens access requires --json so its secret output is intended for a programmatic caller")
+	}
+
+	email := strings.TrimSpace(c.Email)
+	if email == "" {
+		return usage("empty email")
+	}
+	scope := strings.TrimSpace(c.Scope)
+	if scope == "" {
+		return usage("empty scope")
+	}
+
+	accessToken, expiry, err := googleapi.AccessTokenForScopes(ctx, "external", email, []string{scope})
+	if err != nil {
+		return err
+	}
+
+	return outfmt.WriteJSON(ctx, stdoutWriter(ctx), map[string]any{
+		"access_token": accessToken, //nolint:gosec // explicit machine-only OAuth token handoff to a local child process
+		"expires_at":   expiry.UTC().Format(time.RFC3339),
+	})
 }
 
 type AuthTokensListCmd struct{}
