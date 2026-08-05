@@ -1,49 +1,26 @@
-# Repository Guidelines
+# Gog CLI
 
-## Project Structure
+This repository contains the Google Workspace CLI used by ReBattery.
 
-- `cmd/gog/`: CLI entrypoint.
-- `internal/`: implementation (`cmd/`, Google API/OAuth, config/secrets, output/UI).
-- Tests: `*_test.go` next to code; opt-in integration suite in `internal/integration/` (build-tagged).
-- `bin/`: build outputs; `docs/`: specs/releasing; `scripts/`: release helpers + `scripts/gog.mjs`.
+## Structure
 
-## Build, Test, and Development Commands
+- `cmd/gog` is the CLI entry point.
+- `internal` contains commands, APIs, authentication, configuration, and output code.
+- Keep tests next to the code. Integration tests belong in `internal/integration`.
+- `docs` contains product and release details. `scripts` contains release helpers.
 
-- `make` / `make build`: build `bin/gog`.
-- `make tools`: install pinned dev tools into `.tools/`.
-- `make fmt` / `make lint` / `make test` / `make ci`: format, lint, test, full local gate.
-- Optional: `pnpm gog …`: build + run in one step.
-- Hooks: `lefthook install` enables pre-commit/pre-push checks.
+## Rules
 
-## Coding Style & Naming Conventions
+- Keep JSON and plain output parseable on stdout. Send progress and hints to stderr.
+- Treat Gmail label IDs as opaque and case-sensitive. Case-fold label names only during lookup.
+- Keep credentials and tokens out of Git.
+- Prefer the operating system keychain. Use the file keyring only in headless environments.
+- Keep changes focused. Do not include unrelated refactors.
 
-- Formatting: `make fmt` (`goimports` local prefix `github.com/steipete/gogcli` + `gofumpt`).
-- Output: keep stdout parseable (`--json` / `--plain`); send human hints/progress to stderr.
-- Gmail labels: treat label IDs as case-sensitive opaque tokens; only case-fold label names for name lookup.
+## Verification
 
-## Testing Guidelines
+- Run `make fmt`, `make lint`, and `make test` for normal changes.
+- Run `make ci` for broad or release-sensitive changes.
+- Run integration tests only when the change needs live Google API verification.
 
-- Unit tests: stdlib `testing` (and `httptest` where needed).
-- Integration tests (local only):
-  - `GOG_IT_ACCOUNT=you@gmail.com go test -tags=integration ./internal/integration`
-  - Requires OAuth client credentials + a stored refresh token in your keyring.
-
-## Commit & Pull Request Guidelines
-
-- Create commits with `committer "<msg>" <file...>`; avoid manual staging.
-- Follow Conventional Commits + action-oriented subjects (e.g. `feat(cli): add --verbose to send`).
-- Group related changes; avoid bundling unrelated refactors.
-- PRs should summarize scope, note testing performed, and mention any user-facing changes or new flags.
-- PR review flow: when given a PR link, review via `gh pr view` / `gh pr diff` and do not change branches.
-
-### PR Workflow (Review vs Land)
-
-- **Review mode (PR link only):** read `gh pr view/diff`; do not switch branches; do not change code.
-- **Landing mode:** temp branch from `main`; bring in PR (squash default; rebase/merge when needed); fix; update `CHANGELOG.md` (PR #/issue + thanks); run `make ci`; final commit; merge to `main`; delete temp; end on `main`.
-- If landing contributor work, always add `Co-authored-by:` trailers for PR authors, even when we partially rewrite, group, or manually apply their changes; leave a PR comment with what landed + SHAs.
-- New contributor: thank in `CHANGELOG.md` (and update README contributors list if present).
-
-## Security & Configuration Tips
-
-- Never commit OAuth client credential JSON files or tokens.
-- Prefer OS keychain backends; use `GOG_KEYRING_BACKEND=file` + `GOG_KEYRING_PASSWORD` only for headless environments.
+When Ari provides a PR for review, inspect it without changing branches. Land or merge it only when Ari asks.
