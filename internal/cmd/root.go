@@ -100,7 +100,7 @@ type CLI struct {
 	Zoom          ZoomCmd               `cmd:"" help:"Zoom"`
 	AppScript     AppScriptCmd          `cmd:"" name:"appscript" aliases:"script,apps-script" help:"Google Apps Script"`
 	Analytics     AnalyticsCmd          `cmd:"" aliases:"ga" help:"Google Analytics"`
-	Ads           AdsCmd                `cmd:"" name:"ads" help:"Google Ads reporting (read-only)"`
+	Ads           AdsCmd                `cmd:"" name:"ads" help:"Google Ads reporting and guarded account setup"`
 	SearchConsole SearchConsoleCmd      `cmd:"" name:"searchconsole" aliases:"gsc,search-console,webmasters" help:"Google Search Console"`
 	YouTube       YouTubeCmd            `cmd:"" name:"youtube" aliases:"yt" help:"YouTube Data API (search, activities, videos, playlists, comments, channels)"`
 	Photos        PhotosCmd             `cmd:"" name:"photos" aliases:"photo" help:"Google Photos Library and Picker APIs"`

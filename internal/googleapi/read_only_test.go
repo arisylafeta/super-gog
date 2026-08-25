@@ -91,6 +91,7 @@ func TestReadOnlyPOSTAllowlist(t *testing.T) {
 		"https://www.googleapis.com/v2/activity:query",
 		"https://driveactivity.googleapis.com/v2/items:query",
 		"https://sheets.googleapis.com/v4/spreadsheets/id:batchUpdate",
+		"https://googleads.googleapis.com/v25/customers/1234567890:createCustomerClient",
 		"https://googleads.googleapis.com/v25/customers/1234567890/conversionActions:mutate",
 		"https://example.test/v25/customers/1234567890/googleAds:search",
 	}

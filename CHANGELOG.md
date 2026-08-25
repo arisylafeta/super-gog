@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Google Ads: add read-only customer discovery, resource/field metadata, and paginated GAQL reporting with existing Gog OAuth, environment-only developer-token configuration, manager-account routing, and runtime `--readonly` enforcement.
+- Google Ads: add customer discovery, resource/field metadata, paginated GAQL reporting, and narrowly typed client-account and website-conversion creation with dry-run, API validation, confirmation, and runtime `--readonly` enforcement.
 
 ## 0.34.2 - 2026-07-27
 

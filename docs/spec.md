@@ -303,6 +303,8 @@ the CLI cannot list or manage them.
 - `gog ads customers [--login-customer-id ID] [--api-version VERSION]`
 - `gog ads fields <resourceOrField> [--login-customer-id ID] [--api-version VERSION]`
 - `gog ads query <customerId> --gaql QUERY [--page TOKEN] [--login-customer-id ID] [--api-version VERSION]`
+- `gog ads account create <managerCustomerId> --name NAME --currency-code CODE --time-zone ZONE [--validate-only]`
+- `gog ads conversion create <customerId> --name NAME --category REQUEST_QUOTE|CONTACT [--counting-type ONE_PER_CLICK|MANY_PER_CLICK] [--validate-only]`
 - `gog photos list [--max N] [--page TOKEN]`
 - `gog photos search [--album ALBUM_ID] [--media-type PHOTO|VIDEO|ALL_MEDIA] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--include-archived] [--max N] [--page TOKEN]`
 - `gog photos get <mediaItemId>`

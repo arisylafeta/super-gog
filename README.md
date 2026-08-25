@@ -491,11 +491,14 @@ gog searchconsole query sc-domain:example.com --from 2026-02-01 --to 2026-02-07 
 gog searchconsole sitemaps submit sc-domain:example.com https://example.com/sitemap.xml --force
 ```
 
-### Google Ads reporting
+### Google Ads reporting and guarded setup
 
-Google Ads commands are intentionally read-only. Authorize the Ads scope, then
-provide the developer token through the environment; do not pass it on the
-command line. Manager-to-client queries also need the manager customer ID.
+Authorize the Ads scope, then provide the developer token through the
+environment; do not pass it on the command line. Reporting works with
+`--readonly`. The two setup commands support `--dry-run` and `--validate-only`;
+actual account or conversion creation requires confirmation or `--force` and is
+blocked by `--readonly`. Manager-to-client operations need the manager customer
+ID.
 
 ```bash
 gog auth add you@gmail.com --services ads --force-consent
@@ -507,6 +510,12 @@ gog --readonly ads fields campaign --json
 gog --readonly ads query 9876543210 \
   --gaql 'SELECT campaign.id, campaign.name, campaign.status FROM campaign' \
   --json
+
+gog ads account create 1234567890 \
+  --name 'Example UK Ads' --currency-code GBP --time-zone Europe/London \
+  --validate-only --json
+gog ads conversion create 9876543210 --login-customer-id 1234567890 \
+  --name 'Quote completed' --category REQUEST_QUOTE --validate-only --json
 ```
 
 `GOOGLE_ADS_DEVELOPER_TOKEN` and `GOOGLE_ADS_LOGIN_CUSTOMER_ID` are accepted as

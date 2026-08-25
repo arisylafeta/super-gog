@@ -2,12 +2,12 @@
 
 Every `gog` command has a generated docs page. The source of truth is the live CLI schema; run `make docs-commands` after changing command names, flags, help text, aliases, or arguments.
 
-Generated pages: 713.
+Generated pages: 717.
 
 ## Top-level Commands
 
 - [gog admin](gog-admin.md) - Google Workspace Admin (Directory API) - requires domain-wide delegation
-- [gog ads](gog-ads.md) - Google Ads reporting (read-only)
+- [gog ads](gog-ads.md) - Google Ads reporting and guarded account setup
 - [gog analytics](gog-analytics.md) - Google Analytics
 - [gog api](gog-api.md) - Google Discovery APIs and generic method calls
 - [gog appscript](gog-appscript.md) - Google Apps Script
@@ -76,7 +76,11 @@ Generated pages: 713.
       - [gog admin users get](gog-admin-users-get.md) - Get user details
       - [gog admin users list](gog-admin-users-list.md) - List users in a domain
       - [gog admin users suspend](gog-admin-users-suspend.md) - Suspend a user account
-  - [gog ads](gog-ads.md) - Google Ads reporting (read-only)
+  - [gog ads](gog-ads.md) - Google Ads reporting and guarded account setup
+    - [gog ads account](gog-ads-account.md) - Manage Google Ads client accounts
+      - [gog ads account create](gog-ads-account-create.md) - Create a client account beneath a manager
+    - [gog ads conversion](gog-ads-conversion.md) - Manage Google Ads website conversion actions
+      - [gog ads conversion create](gog-ads-conversion-create.md) - Create a website conversion action
     - [gog ads customers](gog-ads-customers.md) - List directly accessible Google Ads customers
     - [gog ads fields](gog-ads-fields.md) - Inspect a Google Ads resource or field
     - [gog ads query](gog-ads-query.md) - Run a read-only Google Ads Query Language query
