@@ -300,6 +300,9 @@ the CLI cannot list or manage them.
 - `gog maps distance --origins CSV --destinations CSV [--mode driving|walking|bicycling|transit] [--units metric|imperial] [--language LANG] [--region REGION]`
 - `gog maps geocode <address...> [--language LANG] [--region REGION]`
 - `gog maps reverse-geocode --lat FLOAT --lng FLOAT [--language LANG] [--region REGION]`
+- `gog ads customers [--login-customer-id ID] [--api-version VERSION]`
+- `gog ads fields <resourceOrField> [--login-customer-id ID] [--api-version VERSION]`
+- `gog ads query <customerId> --gaql QUERY [--page TOKEN] [--login-customer-id ID] [--api-version VERSION]`
 - `gog photos list [--max N] [--page TOKEN]`
 - `gog photos search [--album ALBUM_ID] [--media-type PHOTO|VIDEO|ALL_MEDIA] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--include-archived] [--max N] [--page TOKEN]`
 - `gog photos get <mediaItemId>`

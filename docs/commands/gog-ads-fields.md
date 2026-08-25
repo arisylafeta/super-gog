@@ -1,26 +1,18 @@
-# `gog auth tokens`
+# `gog ads fields`
 
 > Generated from `gog schema --json`. Do not edit this page by hand; run `make docs-commands`.
 
-Manage stored refresh tokens
+Inspect a Google Ads resource or field
 
 ## Usage
 
 ```bash
-gog auth tokens <command>
+gog ads fields (field) <resourceOrField> [flags]
 ```
 
 ## Parent
 
-- [gog auth](gog-auth.md)
-
-## Subcommands
-
-- [gog auth tokens access](gog-auth-tokens-access.md) - Mint a short-lived access token for a local child process
-- [gog auth tokens delete](gog-auth-tokens-delete.md) - Delete a stored refresh token
-- [gog auth tokens export](gog-auth-tokens-export.md) - Export a refresh token to a file (contains secrets)
-- [gog auth tokens import](gog-auth-tokens-import.md) - Import a refresh token file into keyring (contains secrets)
-- [gog auth tokens list](gog-auth-tokens-list.md) - List stored tokens (by key only)
+- [gog ads](gog-ads.md)
 
 ## Flags
 
@@ -28,6 +20,7 @@ gog auth tokens <command>
 | --- | --- | --- | --- |
 | `--access-token` | `string` |  | Use provided access token directly (bypasses stored refresh tokens; token expires in ~1h) |
 | `-a`<br>`--account`<br>`--acct` | `string` |  | Account email, alias, or auto for authenticated Google API commands |
+| `--api-version` | `string` | v25 | Google Ads API version |
 | `--client` | `string` |  | OAuth client name (selects stored credentials + token bucket) |
 | `--color` | `string` | auto | Color output: auto\|always\|never |
 | `--disable-commands` | `string` |  | Comma-separated list of disabled commands; dot paths allowed |
@@ -39,6 +32,7 @@ gog auth tokens <command>
 | `-h`<br>`--help` | `kong.helpFlag` |  | Show context-sensitive help. |
 | `--home` | `string` |  | Override gogcli config/data/state/cache root (equivalent to GOG_HOME) |
 | `-j`<br>`--json`<br>`--machine` | `bool` | false | Output JSON to stdout (best for scripting) |
+| `--login-customer-id`<br>`--manager-customer-id`<br>`--mcc` | `string` |  | Manager customer ID used to access a client account (digits or hyphenated) |
 | `--no-input`<br>`--non-interactive`<br>`--noninteractive` | `bool` |  | Never prompt; fail instead (useful for CI) |
 | `-p`<br>`--plain`<br>`--tsv` | `bool` | false | Output stable, parseable text to stdout (TSV; no colors) |
 | `--readonly` | `bool` | false | Block mutating API requests at runtime; auth add also requests read-only OAuth scopes |
@@ -50,5 +44,5 @@ gog auth tokens <command>
 
 ## See Also
 
-- [gog auth](gog-auth.md)
+- [gog ads](gog-ads.md)
 - [Command index](README.md)

@@ -58,6 +58,10 @@ func (f Factory) AdminDirectory(ctx context.Context, account string) (*admin.Ser
 	return NewAdminDirectory(f.withAuth(ctx), account)
 }
 
+func (f Factory) Ads(ctx context.Context, account string, config AdsConfig) (*AdsClient, error) {
+	return NewAdsClientForAccount(f.withAuth(ctx), account, config)
+}
+
 func (f Factory) AdminOrgUnit(ctx context.Context, account string) (*admin.Service, error) {
 	return NewAdminDirectoryOrgUnit(f.withAuth(ctx), account)
 }

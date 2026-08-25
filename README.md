@@ -5,8 +5,8 @@
 One binary. Task-first commands. Predictable automation.
 
 `gog` gives people, scripts, CI, and coding agents one CLI for Gmail, Calendar,
-Drive, Docs, Sheets, Slides, Forms, Meet, Apps Script, Analytics, Search
-Console, Contacts, Tasks, Classroom, Chat, YouTube, and Workspace admin.
+Drive, Docs, Sheets, Slides, Forms, Meet, Apps Script, Analytics, Google Ads,
+Search Console, Contacts, Tasks, Classroom, Chat, YouTube, and Workspace admin.
 
 ```bash
 # Find mail, inspect today's calendar, and audit a Drive folder.
@@ -126,6 +126,7 @@ Useful Google setup links:
 - [Photos Picker API](https://console.cloud.google.com/apis/library/photospicker.googleapis.com)
 - [Google Analytics Admin API](https://console.cloud.google.com/apis/library/analyticsadmin.googleapis.com)
 - [Google Analytics Data API](https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com)
+- [Google Ads API](https://console.cloud.google.com/apis/library/googleads.googleapis.com)
 - [Google Search Console API](https://console.cloud.google.com/apis/library/searchconsole.googleapis.com)
 - [YouTube Data API v3](https://console.cloud.google.com/apis/library/youtube.googleapis.com)
 - [Apps Script user setting](https://script.google.com/home/usersettings)
@@ -134,8 +135,8 @@ Enable APIs in the same Cloud project that owns your OAuth client. If Google
 returns `accessNotConfigured`, enable that API and retry after propagation.
 
 Consumer `gmail.com` accounts work for normal user APIs such as Gmail, Calendar,
-Drive, Docs, Sheets, Slides, Forms, Apps Script, Analytics, Search Console,
-Contacts/People, Tasks, and Classroom. Workspace-only APIs such as Admin
+Drive, Docs, Sheets, Slides, Forms, Apps Script, Analytics, Google Ads, Search
+Console, Contacts/People, Tasks, and Classroom. Workspace-only APIs such as Admin
 Directory, Cloud Identity Groups, Chat, and Keep/domain-wide-delegation flows
 require a managed domain.
 
@@ -490,6 +491,28 @@ gog searchconsole query sc-domain:example.com --from 2026-02-01 --to 2026-02-07 
 gog searchconsole sitemaps submit sc-domain:example.com https://example.com/sitemap.xml --force
 ```
 
+### Google Ads reporting
+
+Google Ads commands are intentionally read-only. Authorize the Ads scope, then
+provide the developer token through the environment; do not pass it on the
+command line. Manager-to-client queries also need the manager customer ID.
+
+```bash
+gog auth add you@gmail.com --services ads --force-consent
+export GOG_ADS_DEVELOPER_TOKEN='<developer-token>'
+export GOG_ADS_LOGIN_CUSTOMER_ID='1234567890' # optional manager account
+
+gog --readonly ads customers --json
+gog --readonly ads fields campaign --json
+gog --readonly ads query 9876543210 \
+  --gaql 'SELECT campaign.id, campaign.name, campaign.status FROM campaign' \
+  --json
+```
+
+`GOOGLE_ADS_DEVELOPER_TOKEN` and `GOOGLE_ADS_LOGIN_CUSTOMER_ID` are accepted as
+compatibility aliases. Use `--page` with `nextPageToken` to continue a paged
+GAQL response.
+
 ### Backup
 
 Docs: [Backup](docs/backup.md), [`gog backup`](docs/commands/gog-backup.md).
@@ -720,7 +743,7 @@ Docs: [Command index](docs/commands/README.md),
 Common user services:
 
 - Gmail, Calendar, Drive, Docs, Sheets, Slides, Forms, Meet, Zoom, Apps Script
-- Analytics and Search Console
+- Analytics, Google Ads reporting, and Search Console
 - Contacts, People, Tasks, Classroom
 - Chat for Workspace accounts
 - Backup and local utility commands
@@ -777,7 +800,7 @@ Generated service scope table:
 | appscript | yes | Apps Script API | `https://www.googleapis.com/auth/script.projects`<br>`https://www.googleapis.com/auth/script.deployments`<br>`https://www.googleapis.com/auth/script.processes` |  |
 | analytics | yes | Analytics Admin API, Analytics Data API | `https://www.googleapis.com/auth/analytics.readonly` | GA4 account summaries + reporting |
 | searchconsole | yes | Search Console API | `https://www.googleapis.com/auth/webmasters` | Search Analytics + sitemap management |
-| ads | yes | Google Ads API | `https://www.googleapis.com/auth/adwords` | OAuth scope only |
+| ads | yes | Google Ads API | `https://www.googleapis.com/auth/adwords` | Read-only customer discovery, field metadata, and GAQL reporting |
 | groups | no | Cloud Identity API | `https://www.googleapis.com/auth/cloud-identity.groups.readonly` | Workspace only |
 | keep | no | Keep API | `https://www.googleapis.com/auth/keep` | Workspace only; service account (domain-wide delegation) |
 | admin | no | Admin SDK Directory API | `https://www.googleapis.com/auth/admin.directory.user`<br>`https://www.googleapis.com/auth/admin.directory.group`<br>`https://www.googleapis.com/auth/admin.directory.group.member` | Workspace only; service account with domain-wide delegation required |

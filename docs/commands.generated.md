@@ -22,6 +22,10 @@ Generated from `gog schema --json`.
       - [`gog admin users get (info,show) <userEmail>`](commands/gog-admin-users-get.md) - Get user details
       - [`gog admin users list (ls) [flags]`](commands/gog-admin-users-list.md) - List users in a domain
       - [`gog admin users suspend <userEmail>`](commands/gog-admin-users-suspend.md) - Suspend a user account
+  - [`gog ads <command> [flags]`](commands/gog-ads.md) - Google Ads reporting (read-only)
+    - [`gog ads customers (accounts) [flags]`](commands/gog-ads-customers.md) - List directly accessible Google Ads customers
+    - [`gog ads fields (field) <resourceOrField> [flags]`](commands/gog-ads-fields.md) - Inspect a Google Ads resource or field
+    - [`gog ads query (search,report) --gaql=STRING <customerId> [flags]`](commands/gog-ads-query.md) - Run a read-only Google Ads Query Language query
   - [`gog analytics (ga) <command> [flags]`](commands/gog-analytics.md) - Google Analytics
     - [`gog analytics (ga) accounts (list,ls) [flags]`](commands/gog-analytics-accounts.md) - List GA4 account summaries
     - [`gog analytics (ga) report <property> [flags]`](commands/gog-analytics-report.md) - Run a GA4 report (Analytics Data API)
@@ -59,6 +63,7 @@ Generated from `gog schema --json`.
     - [`gog auth setup [<email>] [flags]`](commands/gog-auth-setup.md) - Guide Google Cloud, OAuth client, and account setup
     - [`gog auth status`](commands/gog-auth-status.md) - Show auth configuration and keyring backend
     - [`gog auth tokens <command>`](commands/gog-auth-tokens.md) - Manage stored refresh tokens
+      - [`gog auth tokens access --scope=STRING <email>`](commands/gog-auth-tokens-access.md) - Mint a short-lived access token for a local child process
       - [`gog auth tokens delete <email>`](commands/gog-auth-tokens-delete.md) - Delete a stored refresh token
       - [`gog auth tokens export <email> [flags]`](commands/gog-auth-tokens-export.md) - Export a refresh token to a file (contains secrets)
       - [`gog auth tokens import <inPath>`](commands/gog-auth-tokens-import.md) - Import a refresh token file into keyring (contains secrets)

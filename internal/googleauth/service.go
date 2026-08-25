@@ -268,7 +268,7 @@ var serviceInfoByService = map[Service]serviceInfo{
 		scopes: []string{"https://www.googleapis.com/auth/adwords"},
 		user:   true,
 		apis:   []string{"Google Ads API"},
-		note:   "OAuth scope only",
+		note:   "Read-only customer discovery, field metadata, and GAQL reporting",
 	},
 	ServiceGroups: {
 		scopes: []string{"https://www.googleapis.com/auth/cloud-identity.groups.readonly"},

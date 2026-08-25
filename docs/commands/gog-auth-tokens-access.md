@@ -1,26 +1,18 @@
-# `gog auth tokens`
+# `gog auth tokens access`
 
 > Generated from `gog schema --json`. Do not edit this page by hand; run `make docs-commands`.
 
-Manage stored refresh tokens
+Mint a short-lived access token for a local child process
 
 ## Usage
 
 ```bash
-gog auth tokens <command>
+gog auth tokens access --scope=STRING <email>
 ```
 
 ## Parent
 
-- [gog auth](gog-auth.md)
-
-## Subcommands
-
-- [gog auth tokens access](gog-auth-tokens-access.md) - Mint a short-lived access token for a local child process
-- [gog auth tokens delete](gog-auth-tokens-delete.md) - Delete a stored refresh token
-- [gog auth tokens export](gog-auth-tokens-export.md) - Export a refresh token to a file (contains secrets)
-- [gog auth tokens import](gog-auth-tokens-import.md) - Import a refresh token file into keyring (contains secrets)
-- [gog auth tokens list](gog-auth-tokens-list.md) - List stored tokens (by key only)
+- [gog auth tokens](gog-auth-tokens.md)
 
 ## Flags
 
@@ -43,6 +35,7 @@ gog auth tokens <command>
 | `-p`<br>`--plain`<br>`--tsv` | `bool` | false | Output stable, parseable text to stdout (TSV; no colors) |
 | `--readonly` | `bool` | false | Block mutating API requests at runtime; auth add also requests read-only OAuth scopes |
 | `--results-only` | `bool` |  | In JSON mode, emit only the primary result (drops envelope fields like nextPageToken) |
+| `--scope` | `string` |  | OAuth scope required by the local child process |
 | `--select`<br>`--pick`<br>`--project` | `string` |  | In JSON mode, select comma-separated fields (best-effort; supports dot paths). Desire path: use --fields for most commands. |
 | `-v`<br>`--verbose` | `bool` |  | Enable verbose logging |
 | `--version` | `kong.VersionFlag` |  | Print version and exit |
@@ -50,5 +43,5 @@ gog auth tokens <command>
 
 ## See Also
 
-- [gog auth](gog-auth.md)
+- [gog auth tokens](gog-auth-tokens.md)
 - [Command index](README.md)
