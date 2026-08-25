@@ -95,18 +95,101 @@ func TestAdsClientSearch(t *testing.T) {
 	}
 }
 
+func TestAdsClientCreateCustomerClient(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodPost || request.URL.Path != "/v25/customers/1234567890:createCustomerClient" {
+			t.Fatalf("request = %s %s", request.Method, request.URL.Path)
+		}
+		if got := request.Header.Get("login-customer-id"); got != "1234567890" {
+			t.Fatalf("login-customer-id = %q", got)
+		}
+		var body AdsCreateCustomerClientRequest
+		if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		if !body.ValidateOnly || body.CustomerClient.DescriptiveName != "ReBattery UK Ads" ||
+			body.CustomerClient.CurrencyCode != "GBP" || body.CustomerClient.TimeZone != "Europe/London" {
+			t.Fatalf("body = %#v", body)
+		}
+		_, _ = response.Write([]byte(`{"resourceName":"customers/2468013579"}`))
+	}))
+	t.Cleanup(server.Close)
+
+	client := newAdsTestClient(t, server, AdsConfig{
+		DeveloperToken:  "developer-token",
+		LoginCustomerID: "1234567890",
+	})
+	result, err := client.CreateCustomerClient(context.Background(), "123-456-7890", AdsCreateCustomerClientRequest{
+		CustomerClient: AdsCustomerClientCreate{
+			DescriptiveName: " ReBattery UK Ads ",
+			CurrencyCode:    " gbp ",
+			TimeZone:        " Europe/London ",
+		},
+		ValidateOnly: true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.ResourceName != "customers/2468013579" {
+		t.Fatalf("resource name = %q", result.ResourceName)
+	}
+}
+
+func TestAdsClientCreateConversionAction(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodPost || request.URL.Path != "/v25/customers/2468013579/conversionActions:mutate" {
+			t.Fatalf("request = %s %s", request.Method, request.URL.Path)
+		}
+		var body AdsMutateConversionActionsRequest
+		if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		if !body.ValidateOnly || len(body.Operations) != 1 {
+			t.Fatalf("body = %#v", body)
+		}
+		action := body.Operations[0].Create
+		if action.Name != "Quote completed" || action.Category != "REQUEST_QUOTE" || action.Type != "WEBPAGE" ||
+			action.Status != "ENABLED" || action.CountingType != "ONE_PER_CLICK" || !action.PrimaryForGoal {
+			t.Fatalf("action = %#v", action)
+		}
+		_, _ = response.Write([]byte(`{"results":[{"resourceName":"customers/2468013579/conversionActions/42"}]}`))
+	}))
+	t.Cleanup(server.Close)
+
+	client := newAdsTestClient(t, server, AdsConfig{DeveloperToken: "developer-token"})
+	result, err := client.CreateConversionAction(context.Background(), "246-801-3579", AdsConversionActionCreate{
+		Name:           " Quote completed ",
+		Category:       " request_quote ",
+		Type:           " webpage ",
+		Status:         " enabled ",
+		CountingType:   " one_per_click ",
+		PrimaryForGoal: true,
+	}, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Results) != 1 || result.Results[0].ResourceName != "customers/2468013579/conversionActions/42" {
+		t.Fatalf("results = %#v", result.Results)
+	}
+}
+
 func TestAdsClientAPIError(t *testing.T) {
 	t.Parallel()
 
 	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, _ *http.Request) {
 		response.WriteHeader(http.StatusBadRequest)
-		_, _ = response.Write([]byte(`{"error":{"code":400,"message":"bad GAQL","status":"INVALID_ARGUMENT"}}`))
+		_, _ = response.Write([]byte(`{"error":{"code":400,"message":"bad GAQL","status":"INVALID_ARGUMENT","details":[{"errors":[{"errorCode":{"queryError":"BAD_FIELD_NAME"},"message":"Unknown field.","location":{"fieldPathElements":[{"fieldName":"query"}]}}]}]}}`))
 	}))
 	t.Cleanup(server.Close)
 
 	client := newAdsTestClient(t, server, AdsConfig{DeveloperToken: "developer-token"})
 	_, err := client.Search(context.Background(), "1234567890", AdsSearchRequest{Query: "bad"})
-	if !errors.Is(err, ErrAdsAPI) || !strings.Contains(err.Error(), "INVALID_ARGUMENT") {
+	if !errors.Is(err, ErrAdsAPI) || !strings.Contains(err.Error(), "INVALID_ARGUMENT") ||
+		!strings.Contains(err.Error(), "BAD_FIELD_NAME: Unknown field.: field query") {
 		t.Fatalf("error = %v", err)
 	}
 }

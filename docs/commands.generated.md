@@ -22,7 +22,11 @@ Generated from `gog schema --json`.
       - [`gog admin users get (info,show) <userEmail>`](commands/gog-admin-users-get.md) - Get user details
       - [`gog admin users list (ls) [flags]`](commands/gog-admin-users-list.md) - List users in a domain
       - [`gog admin users suspend <userEmail>`](commands/gog-admin-users-suspend.md) - Suspend a user account
-  - [`gog ads <command> [flags]`](commands/gog-ads.md) - Google Ads reporting (read-only)
+  - [`gog ads <command> [flags]`](commands/gog-ads.md) - Google Ads reporting and guarded account setup
+    - [`gog ads account (client) <command>`](commands/gog-ads-account.md) - Manage Google Ads client accounts
+      - [`gog ads account (client) create --name=STRING --currency-code=STRING --time-zone=STRING <managerCustomerId> [flags]`](commands/gog-ads-account-create.md) - Create a client account beneath a manager
+    - [`gog ads conversion (conversions) <command>`](commands/gog-ads-conversion.md) - Manage Google Ads website conversion actions
+      - [`gog ads conversion (conversions) create --name=STRING --category=STRING <customerId> [flags]`](commands/gog-ads-conversion-create.md) - Create a website conversion action
     - [`gog ads customers (accounts) [flags]`](commands/gog-ads-customers.md) - List directly accessible Google Ads customers
     - [`gog ads fields (field) <resourceOrField> [flags]`](commands/gog-ads-fields.md) - Inspect a Google Ads resource or field
     - [`gog ads query (search,report) --gaql=STRING <customerId> [flags]`](commands/gog-ads-query.md) - Run a read-only Google Ads Query Language query

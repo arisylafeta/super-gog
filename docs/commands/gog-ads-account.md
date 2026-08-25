@@ -1,26 +1,22 @@
-# `gog ads`
+# `gog ads account`
 
 > Generated from `gog schema --json`. Do not edit this page by hand; run `make docs-commands`.
 
-Google Ads reporting and guarded account setup
+Manage Google Ads client accounts
 
 ## Usage
 
 ```bash
-gog ads <command> [flags]
+gog ads account (client) <command>
 ```
 
 ## Parent
 
-- [gog](gog.md)
+- [gog ads](gog-ads.md)
 
 ## Subcommands
 
-- [gog ads account](gog-ads-account.md) - Manage Google Ads client accounts
-- [gog ads conversion](gog-ads-conversion.md) - Manage Google Ads website conversion actions
-- [gog ads customers](gog-ads-customers.md) - List directly accessible Google Ads customers
-- [gog ads fields](gog-ads-fields.md) - Inspect a Google Ads resource or field
-- [gog ads query](gog-ads-query.md) - Run a read-only Google Ads Query Language query
+- [gog ads account create](gog-ads-account-create.md) - Create a client account beneath a manager
 
 ## Flags
 
@@ -50,5 +46,5 @@ gog ads <command> [flags]
 
 ## See Also
 
-- [gog](gog.md)
+- [gog ads](gog-ads.md)
 - [Command index](README.md)

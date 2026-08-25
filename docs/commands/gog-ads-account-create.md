@@ -1,26 +1,18 @@
-# `gog ads`
+# `gog ads account create`
 
 > Generated from `gog schema --json`. Do not edit this page by hand; run `make docs-commands`.
 
-Google Ads reporting and guarded account setup
+Create a client account beneath a manager
 
 ## Usage
 
 ```bash
-gog ads <command> [flags]
+gog ads account (client) create --name=STRING --currency-code=STRING --time-zone=STRING <managerCustomerId> [flags]
 ```
 
 ## Parent
 
-- [gog](gog.md)
-
-## Subcommands
-
-- [gog ads account](gog-ads-account.md) - Manage Google Ads client accounts
-- [gog ads conversion](gog-ads-conversion.md) - Manage Google Ads website conversion actions
-- [gog ads customers](gog-ads-customers.md) - List directly accessible Google Ads customers
-- [gog ads fields](gog-ads-fields.md) - Inspect a Google Ads resource or field
-- [gog ads query](gog-ads-query.md) - Run a read-only Google Ads Query Language query
+- [gog ads account](gog-ads-account.md)
 
 ## Flags
 
@@ -28,8 +20,10 @@ gog ads <command> [flags]
 | --- | --- | --- | --- |
 | `--access-token` | `string` |  | Use provided access token directly (bypasses stored refresh tokens; token expires in ~1h) |
 | `-a`<br>`--account`<br>`--acct` | `string` |  | Account email, alias, or auto for authenticated Google API commands |
+| `--api-version` | `string` | v25 | Google Ads API version |
 | `--client` | `string` |  | OAuth client name (selects stored credentials + token bucket) |
 | `--color` | `string` | auto | Color output: auto\|always\|never |
+| `--currency-code` | `string` |  | Permanent ISO 4217 currency code for the new account |
 | `--disable-commands` | `string` |  | Comma-separated list of disabled commands; dot paths allowed |
 | `-n`<br>`--dry-run`<br>`--dryrun`<br>`--noop`<br>`--preview` | `bool` |  | Do not make changes; print intended actions and exit successfully |
 | `--enable-commands` | `string` |  | Comma-separated list of enabled command prefixes; dot paths allowed (restricts CLI) |
@@ -39,16 +33,20 @@ gog ads <command> [flags]
 | `-h`<br>`--help` | `kong.helpFlag` |  | Show context-sensitive help. |
 | `--home` | `string` |  | Override gogcli config/data/state/cache root (equivalent to GOG_HOME) |
 | `-j`<br>`--json`<br>`--machine` | `bool` | false | Output JSON to stdout (best for scripting) |
+| `--login-customer-id`<br>`--manager-customer-id`<br>`--mcc` | `string` |  | Manager customer ID used to access a client account (digits or hyphenated) |
+| `--name` | `string` |  | Descriptive name for the new client account |
 | `--no-input`<br>`--non-interactive`<br>`--noninteractive` | `bool` |  | Never prompt; fail instead (useful for CI) |
 | `-p`<br>`--plain`<br>`--tsv` | `bool` | false | Output stable, parseable text to stdout (TSV; no colors) |
 | `--readonly` | `bool` | false | Block mutating API requests at runtime; auth add also requests read-only OAuth scopes |
 | `--results-only` | `bool` |  | In JSON mode, emit only the primary result (drops envelope fields like nextPageToken) |
 | `--select`<br>`--pick`<br>`--project` | `string` |  | In JSON mode, select comma-separated fields (best-effort; supports dot paths). Desire path: use --fields for most commands. |
+| `--time-zone` | `string` |  | Permanent IANA time zone for the new account |
+| `--validate-only` | `bool` |  | Validate the account creation request without creating the account |
 | `-v`<br>`--verbose` | `bool` |  | Enable verbose logging |
 | `--version` | `kong.VersionFlag` |  | Print version and exit |
 | `--wrap-untrusted` | `bool` | false | In JSON/raw output, wrap fetched text fields in external untrusted-content markers |
 
 ## See Also
 
-- [gog](gog.md)
+- [gog ads account](gog-ads-account.md)
 - [Command index](README.md)

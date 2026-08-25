@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -96,6 +97,103 @@ func TestAdsQueryJSON(t *testing.T) {
 	}
 	if output.CustomerID != "1234567890" || output.ResultCount != 1 || len(output.Results) != 1 {
 		t.Fatalf("output = %#v", output)
+	}
+}
+
+func TestAdsAccountCreateValidateOnlyJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodPost || request.URL.Path != "/v25/customers/1001623054:createCustomerClient" {
+			t.Fatalf("request = %s %s", request.Method, request.URL.Path)
+		}
+		var body googleapi.AdsCreateCustomerClientRequest
+		if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		if !body.ValidateOnly || body.CustomerClient.CurrencyCode != "GBP" || body.CustomerClient.TimeZone != "Europe/London" {
+			t.Fatalf("body = %#v", body)
+		}
+		_, _ = response.Write([]byte(`{}`))
+	}))
+	t.Cleanup(server.Close)
+	client := newAdsCommandTestClient(t, server)
+
+	setAdsCommandTestEnv(t)
+	result := executeWithAdsTestClient(t, []string{
+		"--json", "--account", "ads@example.com", "ads", "account", "create", "100-162-3054",
+		"--name", "ReBattery UK Ads", "--currency-code", "gbp", "--time-zone", "Europe/London", "--validate-only",
+	}, client, func(config googleapi.AdsConfig) {
+		if config.LoginCustomerID != "1001623054" {
+			t.Fatalf("login customer = %q", config.LoginCustomerID)
+		}
+	})
+	if result.err != nil {
+		t.Fatalf("execute: %v\nstderr: %s", result.err, result.stderr)
+	}
+	if !strings.Contains(result.stdout, `"validatedOnly": true`) {
+		t.Fatalf("stdout = %s", result.stdout)
+	}
+}
+
+func TestAdsConversionCreateValidateOnlyJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodPost || request.URL.Path != "/v25/customers/2468013579/conversionActions:mutate" {
+			t.Fatalf("request = %s %s", request.Method, request.URL.Path)
+		}
+		var body googleapi.AdsMutateConversionActionsRequest
+		if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		if !body.ValidateOnly || len(body.Operations) != 1 || body.Operations[0].Create.Category != "CONTACT" {
+			t.Fatalf("body = %#v", body)
+		}
+		_, _ = response.Write([]byte(`{}`))
+	}))
+	t.Cleanup(server.Close)
+	client := newAdsCommandTestClient(t, server)
+
+	setAdsCommandTestEnv(t)
+	result := executeWithAdsTestClient(t, []string{
+		"--json", "--account", "ads@example.com", "ads", "conversion", "create", "246-801-3579",
+		"--login-customer-id", "100-162-3054", "--name", "Marketplace action", "--category", "CONTACT", "--validate-only",
+	}, client, nil)
+	if result.err != nil {
+		t.Fatalf("execute: %v\nstderr: %s", result.err, result.stderr)
+	}
+	if !strings.Contains(result.stdout, `"validatedOnly": true`) {
+		t.Fatalf("stdout = %s", result.stdout)
+	}
+}
+
+func TestAdsWritesRequireForceAndRespectReadOnly(t *testing.T) {
+	setAdsCommandTestEnv(t)
+	called := false
+	runtime := &app.Runtime{Services: app.Services{
+		Ads: func(context.Context, string, googleapi.AdsConfig) (*googleapi.AdsClient, error) {
+			called = true
+			return nil, nil
+		},
+	}}
+
+	result := executeWithTestRuntime(t, []string{
+		"--no-input", "--account", "ads@example.com", "ads", "account", "create", "1001623054",
+		"--name", "ReBattery UK Ads", "--currency-code", "GBP", "--time-zone", "Europe/London",
+	}, runtime)
+	if result.err == nil || !strings.Contains(result.err.Error(), "without --force") {
+		t.Fatalf("force error = %v", result.err)
+	}
+	if called {
+		t.Fatal("Ads service called before force confirmation")
+	}
+
+	result = executeWithTestRuntime(t, []string{
+		"--readonly", "--force", "--account", "ads@example.com", "ads", "conversion", "create", "2468013579",
+		"--name", "Quote completed", "--category", "REQUEST_QUOTE",
+	}, runtime)
+	if result.err == nil || !errors.Is(result.err, googleapi.ErrReadOnly) {
+		t.Fatalf("read-only error = %v", result.err)
+	}
+	if called {
+		t.Fatal("Ads service called under --readonly")
 	}
 }
 

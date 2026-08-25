@@ -148,6 +148,55 @@ type AdsSearchResponse struct {
 	QueryResourceConsumption string            `json:"queryResourceConsumption,omitempty"`
 }
 
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsCustomerClientCreate struct {
+	DescriptiveName string `json:"descriptiveName"`
+	CurrencyCode    string `json:"currencyCode"`
+	TimeZone        string `json:"timeZone"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsCreateCustomerClientRequest struct {
+	CustomerClient AdsCustomerClientCreate `json:"customerClient"`
+	ValidateOnly   bool                    `json:"validateOnly,omitempty"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsCreateCustomerClientResponse struct {
+	ResourceName string `json:"resourceName,omitempty"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsConversionActionCreate struct {
+	Name           string `json:"name"`
+	Category       string `json:"category"`
+	Type           string `json:"type"`
+	Status         string `json:"status"`
+	CountingType   string `json:"countingType"`
+	PrimaryForGoal bool   `json:"primaryForGoal"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsConversionActionOperation struct {
+	Create AdsConversionActionCreate `json:"create"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsMutateConversionActionsRequest struct {
+	Operations   []AdsConversionActionOperation `json:"operations"`
+	ValidateOnly bool                           `json:"validateOnly,omitempty"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsMutateConversionActionResult struct {
+	ResourceName string `json:"resourceName,omitempty"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsMutateConversionActionsResponse struct {
+	Results []AdsMutateConversionActionResult `json:"results,omitempty"`
+}
+
 func (c *AdsClient) ListAccessibleCustomers(ctx context.Context) (*AdsAccessibleCustomersResponse, error) {
 	var response AdsAccessibleCustomersResponse
 	if err := c.doJSON(ctx, http.MethodGet, c.endpoint("customers:listAccessibleCustomers"), nil, &response); err != nil {
@@ -188,6 +237,81 @@ func (c *AdsClient) Search(ctx context.Context, customerID string, request AdsSe
 
 	var response AdsSearchResponse
 	endpoint := c.endpoint("customers/" + id + "/googleAds:search")
+	if err := c.doJSON(ctx, http.MethodPost, endpoint, request, &response); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (c *AdsClient) CreateCustomerClient(
+	ctx context.Context,
+	managerCustomerID string,
+	request AdsCreateCustomerClientRequest,
+) (*AdsCreateCustomerClientResponse, error) {
+	id, err := NormalizeAdsCustomerID(managerCustomerID)
+	if err != nil {
+		return nil, err
+	}
+	request.CustomerClient.DescriptiveName = strings.TrimSpace(request.CustomerClient.DescriptiveName)
+	request.CustomerClient.CurrencyCode = strings.ToUpper(strings.TrimSpace(request.CustomerClient.CurrencyCode))
+	request.CustomerClient.TimeZone = strings.TrimSpace(request.CustomerClient.TimeZone)
+	if request.CustomerClient.DescriptiveName == "" {
+		return nil, errors.New("Google Ads customer descriptive name is required")
+	}
+	if len(request.CustomerClient.CurrencyCode) != 3 {
+		return nil, errors.New("Google Ads customer currency code must be a three-letter code")
+	}
+	if request.CustomerClient.TimeZone == "" {
+		return nil, errors.New("Google Ads customer time zone is required")
+	}
+
+	var response AdsCreateCustomerClientResponse
+	endpoint := c.endpoint("customers/" + id + ":createCustomerClient")
+	if err := c.doJSON(ctx, http.MethodPost, endpoint, request, &response); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (c *AdsClient) CreateConversionAction(
+	ctx context.Context,
+	customerID string,
+	action AdsConversionActionCreate,
+	validateOnly bool,
+) (*AdsMutateConversionActionsResponse, error) {
+	id, err := NormalizeAdsCustomerID(customerID)
+	if err != nil {
+		return nil, err
+	}
+	action.Name = strings.TrimSpace(action.Name)
+	action.Category = strings.ToUpper(strings.TrimSpace(action.Category))
+	action.Type = strings.ToUpper(strings.TrimSpace(action.Type))
+	action.Status = strings.ToUpper(strings.TrimSpace(action.Status))
+	action.CountingType = strings.ToUpper(strings.TrimSpace(action.CountingType))
+	if action.Name == "" {
+		return nil, errors.New("Google Ads conversion action name is required")
+	}
+	if action.Category == "" {
+		return nil, errors.New("Google Ads conversion action category is required")
+	}
+	if action.Type != "WEBPAGE" {
+		return nil, errors.New("Google Ads conversion action type must be WEBPAGE")
+	}
+	if action.Status != "ENABLED" {
+		return nil, errors.New("Google Ads conversion action status must be ENABLED")
+	}
+	if action.CountingType != "ONE_PER_CLICK" && action.CountingType != "MANY_PER_CLICK" {
+		return nil, errors.New("Google Ads conversion action counting type must be ONE_PER_CLICK or MANY_PER_CLICK")
+	}
+
+	request := AdsMutateConversionActionsRequest{
+		Operations:   []AdsConversionActionOperation{{Create: action}},
+		ValidateOnly: validateOnly,
+	}
+	var response AdsMutateConversionActionsResponse
+	endpoint := c.endpoint("customers/" + id + "/conversionActions:mutate")
 	if err := c.doJSON(ctx, http.MethodPost, endpoint, request, &response); err != nil {
 		return nil, err
 	}
@@ -265,21 +389,36 @@ func adsAPIError(statusCode int, body []byte) error {
 			Code    int    `json:"code"`
 			Message string `json:"message"`
 			Status  string `json:"status"`
+			Details []struct {
+				Errors []struct {
+					ErrorCode map[string]string `json:"errorCode"`
+					Message   string            `json:"message"`
+					Location  struct {
+						FieldPathElements []struct {
+							FieldName string `json:"fieldName"`
+						} `json:"fieldPathElements"`
+					} `json:"location"`
+				} `json:"errors"`
+			} `json:"details"`
 		} `json:"error"`
 	}
 	if err := json.Unmarshal(body, &parsed); err == nil && parsed.Error.Message != "" {
+		message := strings.TrimSpace(parsed.Error.Message)
+		if detail := adsAPIFailureDetail(parsed.Error.Details); detail != "" {
+			message += ": " + detail
+		}
 		status := strings.TrimSpace(parsed.Error.Status)
 		if status != "" {
 			return &HTTPStatusError{
 				Code:   statusCode,
 				Status: status,
-				Err:    fmt.Errorf("%w (%d %s): %s", ErrAdsAPI, statusCode, status, parsed.Error.Message),
+				Err:    fmt.Errorf("%w (%d %s): %s", ErrAdsAPI, statusCode, status, message),
 			}
 		}
 
 		return &HTTPStatusError{
 			Code: statusCode,
-			Err:  fmt.Errorf("%w (%d): %s", ErrAdsAPI, statusCode, parsed.Error.Message),
+			Err:  fmt.Errorf("%w (%d): %s", ErrAdsAPI, statusCode, message),
 		}
 	}
 
@@ -287,4 +426,50 @@ func adsAPIError(statusCode int, body []byte) error {
 		Code: statusCode,
 		Err:  fmt.Errorf("%w (%d): %s", ErrAdsAPI, statusCode, strings.TrimSpace(string(body))),
 	}
+}
+
+func adsAPIFailureDetail(details []struct {
+	Errors []struct {
+		ErrorCode map[string]string `json:"errorCode"`
+		Message   string            `json:"message"`
+		Location  struct {
+			FieldPathElements []struct {
+				FieldName string `json:"fieldName"`
+			} `json:"fieldPathElements"`
+		} `json:"location"`
+	} `json:"errors"`
+}) string {
+	for _, detail := range details {
+		for _, apiError := range detail.Errors {
+			code := ""
+			for _, value := range apiError.ErrorCode {
+				code = strings.TrimSpace(value)
+				if code != "" {
+					break
+				}
+			}
+			message := strings.TrimSpace(apiError.Message)
+			path := make([]string, 0, len(apiError.Location.FieldPathElements))
+			for _, element := range apiError.Location.FieldPathElements {
+				if field := strings.TrimSpace(element.FieldName); field != "" {
+					path = append(path, field)
+				}
+			}
+			parts := make([]string, 0, 3)
+			if code != "" {
+				parts = append(parts, code)
+			}
+			if message != "" {
+				parts = append(parts, message)
+			}
+			if len(path) > 0 {
+				parts = append(parts, "field "+strings.Join(path, "."))
+			}
+			if len(parts) > 0 {
+				return strings.Join(parts, ": ")
+			}
+		}
+	}
+
+	return ""
 }
