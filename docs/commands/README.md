@@ -2,11 +2,12 @@
 
 Every `gog` command has a generated docs page. The source of truth is the live CLI schema; run `make docs-commands` after changing command names, flags, help text, aliases, or arguments.
 
-Generated pages: 708.
+Generated pages: 713.
 
 ## Top-level Commands
 
 - [gog admin](gog-admin.md) - Google Workspace Admin (Directory API) - requires domain-wide delegation
+- [gog ads](gog-ads.md) - Google Ads reporting (read-only)
 - [gog analytics](gog-analytics.md) - Google Analytics
 - [gog api](gog-api.md) - Google Discovery APIs and generic method calls
 - [gog appscript](gog-appscript.md) - Google Apps Script
@@ -75,6 +76,10 @@ Generated pages: 708.
       - [gog admin users get](gog-admin-users-get.md) - Get user details
       - [gog admin users list](gog-admin-users-list.md) - List users in a domain
       - [gog admin users suspend](gog-admin-users-suspend.md) - Suspend a user account
+  - [gog ads](gog-ads.md) - Google Ads reporting (read-only)
+    - [gog ads customers](gog-ads-customers.md) - List directly accessible Google Ads customers
+    - [gog ads fields](gog-ads-fields.md) - Inspect a Google Ads resource or field
+    - [gog ads query](gog-ads-query.md) - Run a read-only Google Ads Query Language query
   - [gog analytics](gog-analytics.md) - Google Analytics
     - [gog analytics accounts](gog-analytics-accounts.md) - List GA4 account summaries
     - [gog analytics report](gog-analytics-report.md) - Run a GA4 report (Analytics Data API)
@@ -112,6 +117,7 @@ Generated pages: 708.
     - [gog auth setup](gog-auth-setup.md) - Guide Google Cloud, OAuth client, and account setup
     - [gog auth status](gog-auth-status.md) - Show auth configuration and keyring backend
     - [gog auth tokens](gog-auth-tokens.md) - Manage stored refresh tokens
+      - [gog auth tokens access](gog-auth-tokens-access.md) - Mint a short-lived access token for a local child process
       - [gog auth tokens delete](gog-auth-tokens-delete.md) - Delete a stored refresh token
       - [gog auth tokens export](gog-auth-tokens-export.md) - Export a refresh token to a file (contains secrets)
       - [gog auth tokens import](gog-auth-tokens-import.md) - Import a refresh token file into keyring (contains secrets)

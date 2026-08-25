@@ -72,6 +72,7 @@ func TestReadOnlyPOSTAllowlist(t *testing.T) {
 		"https://sheets.googleapis.com/v4/spreadsheets/id/values:batchGetByDataFilter",
 		"https://driveactivity.googleapis.com/v2/activity:query",
 		"https://analyticsdata.googleapis.com/v1beta/properties/1:runReport",
+		"https://googleads.googleapis.com/v25/customers/1234567890/googleAds:search",
 	}
 	for _, requestURL := range allowed {
 		request, err := http.NewRequestWithContext(context.Background(), http.MethodPost, requestURL, nil)
@@ -90,6 +91,8 @@ func TestReadOnlyPOSTAllowlist(t *testing.T) {
 		"https://www.googleapis.com/v2/activity:query",
 		"https://driveactivity.googleapis.com/v2/items:query",
 		"https://sheets.googleapis.com/v4/spreadsheets/id:batchUpdate",
+		"https://googleads.googleapis.com/v25/customers/1234567890/conversionActions:mutate",
+		"https://example.test/v25/customers/1234567890/googleAds:search",
 	}
 	for _, requestURL := range blocked {
 		request, err := http.NewRequestWithContext(context.Background(), http.MethodPost, requestURL, nil)

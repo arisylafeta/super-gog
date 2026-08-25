@@ -1,26 +1,24 @@
-# `gog auth tokens`
+# `gog ads`
 
 > Generated from `gog schema --json`. Do not edit this page by hand; run `make docs-commands`.
 
-Manage stored refresh tokens
+Google Ads reporting (read-only)
 
 ## Usage
 
 ```bash
-gog auth tokens <command>
+gog ads <command> [flags]
 ```
 
 ## Parent
 
-- [gog auth](gog-auth.md)
+- [gog](gog.md)
 
 ## Subcommands
 
-- [gog auth tokens access](gog-auth-tokens-access.md) - Mint a short-lived access token for a local child process
-- [gog auth tokens delete](gog-auth-tokens-delete.md) - Delete a stored refresh token
-- [gog auth tokens export](gog-auth-tokens-export.md) - Export a refresh token to a file (contains secrets)
-- [gog auth tokens import](gog-auth-tokens-import.md) - Import a refresh token file into keyring (contains secrets)
-- [gog auth tokens list](gog-auth-tokens-list.md) - List stored tokens (by key only)
+- [gog ads customers](gog-ads-customers.md) - List directly accessible Google Ads customers
+- [gog ads fields](gog-ads-fields.md) - Inspect a Google Ads resource or field
+- [gog ads query](gog-ads-query.md) - Run a read-only Google Ads Query Language query
 
 ## Flags
 
@@ -50,5 +48,5 @@ gog auth tokens <command>
 
 ## See Also
 
-- [gog auth](gog-auth.md)
+- [gog](gog.md)
 - [Command index](README.md)

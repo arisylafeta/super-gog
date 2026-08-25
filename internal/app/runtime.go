@@ -45,6 +45,7 @@ type IO struct {
 
 type (
 	AdminDirectoryServiceFactory func(context.Context, string) (*admin.Service, error)
+	AdsServiceFactory            func(context.Context, string, googleapi.AdsConfig) (*googleapi.AdsClient, error)
 	AppScriptServiceFactory      func(context.Context, string) (*script.Service, error)
 	AnalyticsAdminServiceFactory func(context.Context, string) (*analyticsadmin.Service, error)
 	AnalyticsDataServiceFactory  func(context.Context, string) (*analyticsdata.Service, error)
@@ -91,6 +92,7 @@ type ZoomMeetingClient interface {
 
 type Services struct {
 	AdminDirectory  AdminDirectoryServiceFactory
+	Ads             AdsServiceFactory
 	AdminOrgUnit    AdminDirectoryServiceFactory
 	AppScript       AppScriptServiceFactory
 	AnalyticsAdmin  AnalyticsAdminServiceFactory

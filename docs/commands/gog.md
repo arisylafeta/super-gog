@@ -17,6 +17,7 @@ gog <command> [flags]
 ## Subcommands
 
 - [gog admin](gog-admin.md) - Google Workspace Admin (Directory API) - requires domain-wide delegation
+- [gog ads](gog-ads.md) - Google Ads reporting (read-only)
 - [gog analytics](gog-analytics.md) - Google Analytics
 - [gog api](gog-api.md) - Google Discovery APIs and generic method calls
 - [gog appscript](gog-appscript.md) - Google Apps Script

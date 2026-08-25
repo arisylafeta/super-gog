@@ -41,6 +41,9 @@ func composeRuntimeGoogleServices(runtime *app.Runtime, factory googleapi.Factor
 	}
 
 	services := &runtime.Services
+	if services.Ads == nil {
+		services.Ads = factory.Ads
+	}
 	if services.AdminDirectory == nil {
 		services.AdminDirectory = factory.AdminDirectory
 	}
@@ -159,6 +162,14 @@ func adminDirectoryService(ctx context.Context, account string) (*admin.Service,
 		return nil, serviceError(err, "admin directory")
 	}
 	return runtime.Services.AdminDirectory(ctx, account)
+}
+
+func adsService(ctx context.Context, account string, config googleapi.AdsConfig) (*googleapi.AdsClient, error) {
+	runtime, err := runtimeWithService(ctx, "Google Ads")
+	if err != nil || runtime.Services.Ads == nil {
+		return nil, serviceError(err, "Google Ads")
+	}
+	return runtime.Services.Ads(ctx, account, config)
 }
 
 func adminOrgUnitDirectoryService(ctx context.Context, account string) (*admin.Service, error) {

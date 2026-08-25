@@ -113,6 +113,8 @@ func readOnlyPOSTRequest(request *http.Request) bool {
 			strings.HasSuffix(path, ":batchRunReports") ||
 			strings.HasSuffix(path, ":runPivotReport") ||
 			strings.HasSuffix(path, ":runRealtimeReport")
+	case "googleads.googleapis.com":
+		return strings.HasSuffix(path, "/googleAds:search")
 	default:
 		return false
 	}

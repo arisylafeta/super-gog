@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Google Ads: add read-only customer discovery, resource/field metadata, and paginated GAQL reporting with existing Gog OAuth, environment-only developer-token configuration, manager-account routing, and runtime `--readonly` enforcement.
+
 ## 0.34.2 - 2026-07-27
 
 - Security: update gRPC-Go, PostCSS, and Sharp/libvips to patched releases, clearing three high-severity dependency alerts. (#940)
