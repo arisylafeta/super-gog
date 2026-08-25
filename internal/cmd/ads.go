@@ -18,7 +18,9 @@ type AdsCmd struct {
 	Fields     AdsFieldsCmd     `cmd:"" name:"fields" aliases:"field" help:"Inspect a Google Ads resource or field"`
 	Query      AdsQueryCmd      `cmd:"" name:"query" aliases:"search,report" help:"Run a read-only Google Ads Query Language query"`
 	Account    AdsAccountCmd    `cmd:"" name:"account" aliases:"client" help:"Manage Google Ads client accounts"`
+	Campaign   AdsCampaignCmd   `cmd:"" name:"campaign" aliases:"campaigns" help:"Manage Google Ads campaigns"`
 	Conversion AdsConversionCmd `cmd:"" name:"conversion" aliases:"conversions" help:"Manage Google Ads website conversion actions"`
+	Goal       AdsGoalCmd       `cmd:"" name:"goal" aliases:"goals" help:"Manage Google Ads customer conversion goals"`
 }
 
 type AdsConnectionFlags struct {
@@ -200,7 +202,213 @@ func (c *AdsAccountCreateCmd) Run(ctx context.Context, flags *RootFlags) error {
 }
 
 type AdsConversionCmd struct {
-	Create AdsConversionCreateCmd `cmd:"" help:"Create a website conversion action"`
+	Create    AdsConversionCreateCmd    `cmd:"" help:"Create a website conversion action"`
+	Secondary AdsConversionSecondaryCmd `cmd:"" help:"Make one conversion action secondary (non-biddable)"`
+}
+
+type AdsConversionSecondaryCmd struct {
+	AdsConnectionFlags `embed:""`
+	CustomerID         string `arg:"" name:"customerId" help:"Google Ads client customer ID (digits or hyphenated)"`
+	ConversionActionID string `arg:"" name:"conversionActionId" help:"Google Ads conversion action ID"`
+	ValidateOnly       bool   `name:"validate-only" help:"Validate the update without changing the conversion action"`
+}
+
+func (c *AdsConversionSecondaryCmd) Run(ctx context.Context, flags *RootFlags) error {
+	customerID, err := googleapi.NormalizeAdsCustomerID(c.CustomerID)
+	if err != nil {
+		return usage(err.Error())
+	}
+	actionID, err := googleapi.NormalizeAdsCustomerID(c.ConversionActionID)
+	if err != nil {
+		return usage("conversion action ID: " + err.Error())
+	}
+	plan := map[string]any{
+		"customerId":         customerID,
+		"conversionActionId": actionID,
+		"primaryForGoal":     false,
+		"validateOnly":       c.ValidateOnly,
+	}
+	if dryRunErr := dryRunExit(ctx, flags, "ads.conversion.secondary", plan); dryRunErr != nil {
+		return dryRunErr
+	}
+	if googleapi.ReadOnly(ctx) {
+		return fmt.Errorf("%w: Google Ads conversion update", googleapi.ErrReadOnly)
+	}
+	if !c.ValidateOnly {
+		if confirmErr := confirmDestructiveChecked(ctx, flags, "make Google Ads conversion action "+actionID+" secondary"); confirmErr != nil {
+			return confirmErr
+		}
+	}
+
+	client, err := requireAdsClient(ctx, flags, c.AdsConnectionFlags)
+	if err != nil {
+		return err
+	}
+	response, err := client.MakeConversionActionSecondary(ctx, customerID, actionID, c.ValidateOnly)
+	if err != nil {
+		return err
+	}
+	resourceName := ""
+	if len(response.Results) > 0 {
+		resourceName = response.Results[0].ResourceName
+	}
+	result := map[string]any{
+		"customerId":         customerID,
+		"conversionActionId": actionID,
+		"primaryForGoal":     false,
+		"resourceName":       resourceName,
+		"validatedOnly":      c.ValidateOnly,
+	}
+	if outfmt.IsJSON(ctx) {
+		return outfmt.WriteJSON(ctx, stdoutWriter(ctx), result)
+	}
+	return writeResult(ctx, ui.FromContext(ctx),
+		kv("customer_id", customerID),
+		kv("conversion_action_id", actionID),
+		kv("primary_for_goal", false),
+		kv("resource_name", resourceName),
+		kv("validated_only", c.ValidateOnly),
+	)
+}
+
+type AdsCampaignCmd struct {
+	Pause AdsCampaignPauseCmd `cmd:"" help:"Pause one campaign"`
+}
+
+type AdsGoalCmd struct {
+	Disable AdsGoalDisableCmd `cmd:"" help:"Make one customer conversion goal non-biddable"`
+}
+
+type AdsGoalDisableCmd struct {
+	AdsConnectionFlags `embed:""`
+	CustomerID         string `arg:"" name:"customerId" help:"Google Ads client customer ID (digits or hyphenated)"`
+	Category           string `name:"category" help:"Conversion goal category" enum:"SUBMIT_LEAD_FORM" required:""`
+	Origin             string `name:"origin" help:"Conversion goal origin" enum:"WEBSITE,GOOGLE_HOSTED" required:""`
+	ValidateOnly       bool   `name:"validate-only" help:"Validate the update without changing the goal"`
+}
+
+func (c *AdsGoalDisableCmd) Run(ctx context.Context, flags *RootFlags) error {
+	customerID, err := googleapi.NormalizeAdsCustomerID(c.CustomerID)
+	if err != nil {
+		return usage(err.Error())
+	}
+	category := strings.ToUpper(strings.TrimSpace(c.Category))
+	origin := strings.ToUpper(strings.TrimSpace(c.Origin))
+	plan := map[string]any{
+		"customerId":   customerID,
+		"category":     category,
+		"origin":       origin,
+		"biddable":     false,
+		"validateOnly": c.ValidateOnly,
+	}
+	if dryRunErr := dryRunExit(ctx, flags, "ads.goal.disable", plan); dryRunErr != nil {
+		return dryRunErr
+	}
+	if googleapi.ReadOnly(ctx) {
+		return fmt.Errorf("%w: Google Ads conversion goal update", googleapi.ErrReadOnly)
+	}
+	if !c.ValidateOnly {
+		if confirmErr := confirmDestructiveChecked(ctx, flags, "disable Google Ads conversion goal "+category+"~"+origin); confirmErr != nil {
+			return confirmErr
+		}
+	}
+
+	client, err := requireAdsClient(ctx, flags, c.AdsConnectionFlags)
+	if err != nil {
+		return err
+	}
+	response, err := client.DisableCustomerConversionGoal(ctx, customerID, category, origin, c.ValidateOnly)
+	if err != nil {
+		return err
+	}
+	resourceName := ""
+	if len(response.Results) > 0 {
+		resourceName = response.Results[0].ResourceName
+	}
+	result := map[string]any{
+		"customerId":    customerID,
+		"category":      category,
+		"origin":        origin,
+		"biddable":      false,
+		"resourceName":  resourceName,
+		"validatedOnly": c.ValidateOnly,
+	}
+	if outfmt.IsJSON(ctx) {
+		return outfmt.WriteJSON(ctx, stdoutWriter(ctx), result)
+	}
+	return writeResult(ctx, ui.FromContext(ctx),
+		kv("customer_id", customerID),
+		kv("category", category),
+		kv("origin", origin),
+		kv("biddable", false),
+		kv("resource_name", resourceName),
+		kv("validated_only", c.ValidateOnly),
+	)
+}
+
+type AdsCampaignPauseCmd struct {
+	AdsConnectionFlags `embed:""`
+	CustomerID         string `arg:"" name:"customerId" help:"Google Ads client customer ID (digits or hyphenated)"`
+	CampaignID         string `arg:"" name:"campaignId" help:"Google Ads campaign ID (digits or hyphenated)"`
+	ValidateOnly       bool   `name:"validate-only" help:"Validate the campaign pause without changing the campaign"`
+}
+
+func (c *AdsCampaignPauseCmd) Run(ctx context.Context, flags *RootFlags) error {
+	customerID, err := googleapi.NormalizeAdsCustomerID(c.CustomerID)
+	if err != nil {
+		return usage(err.Error())
+	}
+	campaignID, err := googleapi.NormalizeAdsCustomerID(c.CampaignID)
+	if err != nil {
+		return usage("campaign ID: " + err.Error())
+	}
+	plan := map[string]any{
+		"customerId":   customerID,
+		"campaignId":   campaignID,
+		"status":       "PAUSED",
+		"validateOnly": c.ValidateOnly,
+	}
+	if dryRunErr := dryRunExit(ctx, flags, "ads.campaign.pause", plan); dryRunErr != nil {
+		return dryRunErr
+	}
+	if googleapi.ReadOnly(ctx) {
+		return fmt.Errorf("%w: Google Ads campaign pause", googleapi.ErrReadOnly)
+	}
+	if !c.ValidateOnly {
+		if confirmErr := confirmDestructiveChecked(ctx, flags, "pause Google Ads campaign "+campaignID); confirmErr != nil {
+			return confirmErr
+		}
+	}
+
+	client, err := requireAdsClient(ctx, flags, c.AdsConnectionFlags)
+	if err != nil {
+		return err
+	}
+	response, err := client.PauseCampaign(ctx, customerID, campaignID, c.ValidateOnly)
+	if err != nil {
+		return err
+	}
+	resourceName := ""
+	if len(response.Results) > 0 {
+		resourceName = response.Results[0].ResourceName
+	}
+	result := map[string]any{
+		"customerId":    customerID,
+		"campaignId":    campaignID,
+		"resourceName":  resourceName,
+		"status":        "PAUSED",
+		"validatedOnly": c.ValidateOnly,
+	}
+	if outfmt.IsJSON(ctx) {
+		return outfmt.WriteJSON(ctx, stdoutWriter(ctx), result)
+	}
+	return writeResult(ctx, ui.FromContext(ctx),
+		kv("customer_id", customerID),
+		kv("campaign_id", campaignID),
+		kv("resource_name", resourceName),
+		kv("status", "PAUSED"),
+		kv("validated_only", c.ValidateOnly),
+	)
 }
 
 type AdsConversionCreateCmd struct {

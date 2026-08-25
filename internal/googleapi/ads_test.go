@@ -152,6 +152,9 @@ func TestAdsClientCreateConversionAction(t *testing.T) {
 			t.Fatalf("body = %#v", body)
 		}
 		action := body.Operations[0].Create
+		if action == nil {
+			t.Fatal("missing create operation")
+		}
 		if action.Name != "Quote completed" || action.Category != "REQUEST_QUOTE" || action.Type != "WEBPAGE" ||
 			action.Status != "ENABLED" || action.CountingType != "ONE_PER_CLICK" || !action.PrimaryForGoal {
 			t.Fatalf("action = %#v", action)
@@ -173,6 +176,105 @@ func TestAdsClientCreateConversionAction(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(result.Results) != 1 || result.Results[0].ResourceName != "customers/2468013579/conversionActions/42" {
+		t.Fatalf("results = %#v", result.Results)
+	}
+}
+
+func TestAdsClientMakeConversionActionSecondary(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodPost || request.URL.Path != "/v25/customers/2468013579/conversionActions:mutate" {
+			t.Fatalf("request = %s %s", request.Method, request.URL.Path)
+		}
+		var body AdsMutateConversionActionsRequest
+		if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		if !body.ValidateOnly || len(body.Operations) != 1 {
+			t.Fatalf("body = %#v", body)
+		}
+		operation := body.Operations[0]
+		if operation.Update == nil || operation.Update.ResourceName != "customers/2468013579/conversionActions/42" ||
+			operation.Update.PrimaryForGoal || operation.UpdateMask != "primary_for_goal" || operation.Create != nil {
+			t.Fatalf("operation = %#v", operation)
+		}
+		_, _ = response.Write([]byte(`{"results":[{"resourceName":"customers/2468013579/conversionActions/42"}]}`))
+	}))
+	t.Cleanup(server.Close)
+
+	client := newAdsTestClient(t, server, AdsConfig{DeveloperToken: "developer-token"})
+	result, err := client.MakeConversionActionSecondary(context.Background(), "246-801-3579", "42", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Results) != 1 || result.Results[0].ResourceName != "customers/2468013579/conversionActions/42" {
+		t.Fatalf("results = %#v", result.Results)
+	}
+}
+
+func TestAdsClientPauseCampaign(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodPost || request.URL.Path != "/v25/customers/2468013579/campaigns:mutate" {
+			t.Fatalf("request = %s %s", request.Method, request.URL.Path)
+		}
+		var body AdsMutateCampaignsRequest
+		if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		if !body.ValidateOnly || len(body.Operations) != 1 {
+			t.Fatalf("body = %#v", body)
+		}
+		operation := body.Operations[0]
+		if operation.Update.ResourceName != "customers/2468013579/campaigns/42" ||
+			operation.Update.Status != "PAUSED" || operation.UpdateMask != "status" {
+			t.Fatalf("operation = %#v", operation)
+		}
+		_, _ = response.Write([]byte(`{"results":[{"resourceName":"customers/2468013579/campaigns/42"}]}`))
+	}))
+	t.Cleanup(server.Close)
+
+	client := newAdsTestClient(t, server, AdsConfig{DeveloperToken: "developer-token"})
+	result, err := client.PauseCampaign(context.Background(), "246-801-3579", "42", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Results) != 1 || result.Results[0].ResourceName != "customers/2468013579/campaigns/42" {
+		t.Fatalf("results = %#v", result.Results)
+	}
+}
+
+func TestAdsClientDisableCustomerConversionGoal(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodPost || request.URL.Path != "/v25/customers/2468013579/customerConversionGoals:mutate" {
+			t.Fatalf("request = %s %s", request.Method, request.URL.Path)
+		}
+		var body AdsMutateCustomerConversionGoalsRequest
+		if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		if !body.ValidateOnly || len(body.Operations) != 1 {
+			t.Fatalf("body = %#v", body)
+		}
+		operation := body.Operations[0]
+		if operation.Update.ResourceName != "customers/2468013579/customerConversionGoals/SUBMIT_LEAD_FORM~WEBSITE" ||
+			operation.Update.Biddable || operation.UpdateMask != "biddable" {
+			t.Fatalf("operation = %#v", operation)
+		}
+		_, _ = response.Write([]byte(`{"results":[{"resourceName":"customers/2468013579/customerConversionGoals/SUBMIT_LEAD_FORM~WEBSITE"}]}`))
+	}))
+	t.Cleanup(server.Close)
+
+	client := newAdsTestClient(t, server, AdsConfig{DeveloperToken: "developer-token"})
+	result, err := client.DisableCustomerConversionGoal(context.Background(), "246-801-3579", " submit_lead_form ", " website ", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Results) != 1 || result.Results[0].ResourceName != "customers/2468013579/customerConversionGoals/SUBMIT_LEAD_FORM~WEBSITE" {
 		t.Fatalf("results = %#v", result.Results)
 	}
 }

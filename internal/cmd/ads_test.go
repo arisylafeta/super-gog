@@ -143,7 +143,7 @@ func TestAdsConversionCreateValidateOnlyJSON(t *testing.T) {
 		if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
 			t.Fatal(err)
 		}
-		if !body.ValidateOnly || len(body.Operations) != 1 || body.Operations[0].Create.Category != "CONTACT" {
+		if !body.ValidateOnly || len(body.Operations) != 1 || body.Operations[0].Create == nil || body.Operations[0].Create.Category != "CONTACT" {
 			t.Fatalf("body = %#v", body)
 		}
 		_, _ = response.Write([]byte(`{}`))
@@ -160,6 +160,96 @@ func TestAdsConversionCreateValidateOnlyJSON(t *testing.T) {
 		t.Fatalf("execute: %v\nstderr: %s", result.err, result.stderr)
 	}
 	if !strings.Contains(result.stdout, `"validatedOnly": true`) {
+		t.Fatalf("stdout = %s", result.stdout)
+	}
+}
+
+func TestAdsConversionSecondaryValidateOnlyJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodPost || request.URL.Path != "/v25/customers/2468013579/conversionActions:mutate" {
+			t.Fatalf("request = %s %s", request.Method, request.URL.Path)
+		}
+		var body googleapi.AdsMutateConversionActionsRequest
+		if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		if !body.ValidateOnly || len(body.Operations) != 1 || body.Operations[0].Update == nil || body.Operations[0].Update.PrimaryForGoal {
+			t.Fatalf("body = %#v", body)
+		}
+		_, _ = response.Write([]byte(`{}`))
+	}))
+	t.Cleanup(server.Close)
+	client := newAdsCommandTestClient(t, server)
+
+	setAdsCommandTestEnv(t)
+	result := executeWithAdsTestClient(t, []string{
+		"--json", "--account", "ads@example.com", "ads", "conversion", "secondary", "246-801-3579", "42",
+		"--login-customer-id", "100-162-3054", "--validate-only",
+	}, client, nil)
+	if result.err != nil {
+		t.Fatalf("execute: %v\nstderr: %s", result.err, result.stderr)
+	}
+	if !strings.Contains(result.stdout, `"primaryForGoal": false`) || !strings.Contains(result.stdout, `"validatedOnly": true`) {
+		t.Fatalf("stdout = %s", result.stdout)
+	}
+}
+
+func TestAdsCampaignPauseValidateOnlyJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodPost || request.URL.Path != "/v25/customers/2468013579/campaigns:mutate" {
+			t.Fatalf("request = %s %s", request.Method, request.URL.Path)
+		}
+		var body googleapi.AdsMutateCampaignsRequest
+		if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		if !body.ValidateOnly || len(body.Operations) != 1 || body.Operations[0].Update.Status != "PAUSED" {
+			t.Fatalf("body = %#v", body)
+		}
+		_, _ = response.Write([]byte(`{}`))
+	}))
+	t.Cleanup(server.Close)
+	client := newAdsCommandTestClient(t, server)
+
+	setAdsCommandTestEnv(t)
+	result := executeWithAdsTestClient(t, []string{
+		"--json", "--account", "ads@example.com", "ads", "campaign", "pause", "246-801-3579", "42",
+		"--login-customer-id", "100-162-3054", "--validate-only",
+	}, client, nil)
+	if result.err != nil {
+		t.Fatalf("execute: %v\nstderr: %s", result.err, result.stderr)
+	}
+	if !strings.Contains(result.stdout, `"validatedOnly": true`) || !strings.Contains(result.stdout, `"status": "PAUSED"`) {
+		t.Fatalf("stdout = %s", result.stdout)
+	}
+}
+
+func TestAdsGoalDisableValidateOnlyJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodPost || request.URL.Path != "/v25/customers/2468013579/customerConversionGoals:mutate" {
+			t.Fatalf("request = %s %s", request.Method, request.URL.Path)
+		}
+		var body googleapi.AdsMutateCustomerConversionGoalsRequest
+		if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		if !body.ValidateOnly || len(body.Operations) != 1 || body.Operations[0].Update.Biddable {
+			t.Fatalf("body = %#v", body)
+		}
+		_, _ = response.Write([]byte(`{}`))
+	}))
+	t.Cleanup(server.Close)
+	client := newAdsCommandTestClient(t, server)
+
+	setAdsCommandTestEnv(t)
+	result := executeWithAdsTestClient(t, []string{
+		"--json", "--account", "ads@example.com", "ads", "goal", "disable", "246-801-3579",
+		"--login-customer-id", "100-162-3054", "--category", "SUBMIT_LEAD_FORM", "--origin", "WEBSITE", "--validate-only",
+	}, client, nil)
+	if result.err != nil {
+		t.Fatalf("execute: %v\nstderr: %s", result.err, result.stderr)
+	}
+	if !strings.Contains(result.stdout, `"biddable": false`) || !strings.Contains(result.stdout, `"validatedOnly": true`) {
 		t.Fatalf("stdout = %s", result.stdout)
 	}
 }
@@ -194,6 +284,16 @@ func TestAdsWritesRequireForceAndRespectReadOnly(t *testing.T) {
 	}
 	if called {
 		t.Fatal("Ads service called under --readonly")
+	}
+
+	result = executeWithTestRuntime(t, []string{
+		"--readonly", "--force", "--account", "ads@example.com", "ads", "campaign", "pause", "2468013579", "42",
+	}, runtime)
+	if result.err == nil || !errors.Is(result.err, googleapi.ErrReadOnly) {
+		t.Fatalf("read-only campaign error = %v", result.err)
+	}
+	if called {
+		t.Fatal("Ads service called under read-only campaign pause")
 	}
 }
 
