@@ -177,8 +177,16 @@ type AdsConversionActionCreate struct {
 }
 
 //nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsConversionActionUpdate struct {
+	ResourceName   string `json:"resourceName"`
+	PrimaryForGoal bool   `json:"primaryForGoal"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
 type AdsConversionActionOperation struct {
-	Create AdsConversionActionCreate `json:"create"`
+	Create     *AdsConversionActionCreate `json:"create,omitempty"`
+	Update     *AdsConversionActionUpdate `json:"update,omitempty"`
+	UpdateMask string                     `json:"updateMask,omitempty"`
 }
 
 //nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
@@ -195,6 +203,62 @@ type AdsMutateConversionActionResult struct {
 //nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
 type AdsMutateConversionActionsResponse struct {
 	Results []AdsMutateConversionActionResult `json:"results,omitempty"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsCampaignStatusUpdate struct {
+	ResourceName string `json:"resourceName"`
+	Status       string `json:"status"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsCampaignOperation struct {
+	Update     AdsCampaignStatusUpdate `json:"update"`
+	UpdateMask string                  `json:"updateMask"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsMutateCampaignsRequest struct {
+	Operations   []AdsCampaignOperation `json:"operations"`
+	ValidateOnly bool                   `json:"validateOnly,omitempty"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsMutateCampaignResult struct {
+	ResourceName string `json:"resourceName,omitempty"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsMutateCampaignsResponse struct {
+	Results []AdsMutateCampaignResult `json:"results,omitempty"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsCustomerConversionGoalUpdate struct {
+	ResourceName string `json:"resourceName"`
+	Biddable     bool   `json:"biddable"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsCustomerConversionGoalOperation struct {
+	Update     AdsCustomerConversionGoalUpdate `json:"update"`
+	UpdateMask string                          `json:"updateMask"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsMutateCustomerConversionGoalsRequest struct {
+	Operations   []AdsCustomerConversionGoalOperation `json:"operations"`
+	ValidateOnly bool                                 `json:"validateOnly,omitempty"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsMutateCustomerConversionGoalResult struct {
+	ResourceName string `json:"resourceName,omitempty"`
+}
+
+//nolint:tagliatelle // Google Ads REST resources use lowerCamelCase JSON fields.
+type AdsMutateCustomerConversionGoalsResponse struct {
+	Results []AdsMutateCustomerConversionGoalResult `json:"results,omitempty"`
 }
 
 func (c *AdsClient) ListAccessibleCustomers(ctx context.Context) (*AdsAccessibleCustomersResponse, error) {
@@ -307,11 +371,121 @@ func (c *AdsClient) CreateConversionAction(
 	}
 
 	request := AdsMutateConversionActionsRequest{
-		Operations:   []AdsConversionActionOperation{{Create: action}},
+		Operations:   []AdsConversionActionOperation{{Create: &action}},
 		ValidateOnly: validateOnly,
 	}
 	var response AdsMutateConversionActionsResponse
 	endpoint := c.endpoint("customers/" + id + "/conversionActions:mutate")
+	if err := c.doJSON(ctx, http.MethodPost, endpoint, request, &response); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (c *AdsClient) MakeConversionActionSecondary(
+	ctx context.Context,
+	customerID string,
+	conversionActionID string,
+	validateOnly bool,
+) (*AdsMutateConversionActionsResponse, error) {
+	id, err := NormalizeAdsCustomerID(customerID)
+	if err != nil {
+		return nil, err
+	}
+	actionID, err := NormalizeAdsCustomerID(conversionActionID)
+	if err != nil {
+		return nil, fmt.Errorf("conversion action ID: %w", err)
+	}
+
+	resourceName := "customers/" + id + "/conversionActions/" + actionID
+	request := AdsMutateConversionActionsRequest{
+		Operations: []AdsConversionActionOperation{{
+			Update: &AdsConversionActionUpdate{
+				ResourceName:   resourceName,
+				PrimaryForGoal: false,
+			},
+			UpdateMask: "primary_for_goal",
+		}},
+		ValidateOnly: validateOnly,
+	}
+	var response AdsMutateConversionActionsResponse
+	endpoint := c.endpoint("customers/" + id + "/conversionActions:mutate")
+	if err := c.doJSON(ctx, http.MethodPost, endpoint, request, &response); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (c *AdsClient) PauseCampaign(
+	ctx context.Context,
+	customerID string,
+	campaignID string,
+	validateOnly bool,
+) (*AdsMutateCampaignsResponse, error) {
+	id, err := NormalizeAdsCustomerID(customerID)
+	if err != nil {
+		return nil, err
+	}
+	campaign, err := NormalizeAdsCustomerID(campaignID)
+	if err != nil {
+		return nil, fmt.Errorf("campaign ID: %w", err)
+	}
+
+	resourceName := "customers/" + id + "/campaigns/" + campaign
+	request := AdsMutateCampaignsRequest{
+		Operations: []AdsCampaignOperation{{
+			Update: AdsCampaignStatusUpdate{
+				ResourceName: resourceName,
+				Status:       "PAUSED",
+			},
+			UpdateMask: "status",
+		}},
+		ValidateOnly: validateOnly,
+	}
+	var response AdsMutateCampaignsResponse
+	endpoint := c.endpoint("customers/" + id + "/campaigns:mutate")
+	if err := c.doJSON(ctx, http.MethodPost, endpoint, request, &response); err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func (c *AdsClient) DisableCustomerConversionGoal(
+	ctx context.Context,
+	customerID string,
+	category string,
+	origin string,
+	validateOnly bool,
+) (*AdsMutateCustomerConversionGoalsResponse, error) {
+	id, err := NormalizeAdsCustomerID(customerID)
+	if err != nil {
+		return nil, err
+	}
+	category = strings.ToUpper(strings.TrimSpace(category))
+	origin = strings.ToUpper(strings.TrimSpace(origin))
+	if category == "" {
+		return nil, errors.New("Google Ads conversion goal category is required")
+	}
+	if origin == "" {
+		return nil, errors.New("Google Ads conversion goal origin is required")
+	}
+
+	resourceName := "customers/" + id + "/customerConversionGoals/" + category + "~" + origin
+	request := AdsMutateCustomerConversionGoalsRequest{
+		Operations: []AdsCustomerConversionGoalOperation{{
+			Update: AdsCustomerConversionGoalUpdate{
+				ResourceName: resourceName,
+				Biddable:     false,
+			},
+			UpdateMask: "biddable",
+		}},
+		ValidateOnly: validateOnly,
+	}
+	var response AdsMutateCustomerConversionGoalsResponse
+	endpoint := c.endpoint("customers/" + id + "/customerConversionGoals:mutate")
 	if err := c.doJSON(ctx, http.MethodPost, endpoint, request, &response); err != nil {
 		return nil, err
 	}
