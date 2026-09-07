@@ -612,7 +612,8 @@ func adsAPIFailureDetail(details []struct {
 			} `json:"fieldPathElements"`
 		} `json:"location"`
 	} `json:"errors"`
-}) string {
+},
+) string {
 	for _, detail := range details {
 		for _, apiError := range detail.Errors {
 			code := ""

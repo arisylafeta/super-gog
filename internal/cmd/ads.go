@@ -14,6 +14,8 @@ import (
 )
 
 type AdsCmd struct {
+	Experiment AdsExperimentCmd `cmd:"" help:"Schedule Google Ads experiments"`
+	Mutate     AdsMutateCmd     `cmd:"" help:"Validate or apply a Google Ads mutation request from a JSON file"`
 	Customers  AdsCustomersCmd  `cmd:"" name:"customers" aliases:"accounts" help:"List directly accessible Google Ads customers"`
 	Fields     AdsFieldsCmd     `cmd:"" name:"fields" aliases:"field" help:"Inspect a Google Ads resource or field"`
 	Query      AdsQueryCmd      `cmd:"" name:"query" aliases:"search,report" help:"Run a read-only Google Ads Query Language query"`
