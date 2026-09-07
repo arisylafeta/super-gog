@@ -68,7 +68,12 @@ func PrepareAdsMutation(service string, body []byte, apply bool) (map[string]jso
 		request["validateOnly"] = json.RawMessage("false")
 	}
 
-	request["partialFailure"] = json.RawMessage("false")
+	if service == "customConversionGoals" || service == "conversionGoalCampaignConfigs" {
+		// These atomic services do not accept the partialFailure field.
+		delete(request, "partialFailure")
+	} else {
+		request["partialFailure"] = json.RawMessage("false")
+	}
 
 	return request, nil
 }

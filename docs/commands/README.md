@@ -2,7 +2,7 @@
 
 Every `gog` command has a generated docs page. The source of truth is the live CLI schema; run `make docs-commands` after changing command names, flags, help text, aliases, or arguments.
 
-Generated pages: 717.
+Generated pages: 725.
 
 ## Top-level Commands
 
@@ -79,10 +79,18 @@ Generated pages: 717.
   - [gog ads](gog-ads.md) - Google Ads reporting and guarded account setup
     - [gog ads account](gog-ads-account.md) - Manage Google Ads client accounts
       - [gog ads account create](gog-ads-account-create.md) - Create a client account beneath a manager
+    - [gog ads campaign](gog-ads-campaign.md) - Manage Google Ads campaigns
+      - [gog ads campaign pause](gog-ads-campaign-pause.md) - Pause one campaign
     - [gog ads conversion](gog-ads-conversion.md) - Manage Google Ads website conversion actions
       - [gog ads conversion create](gog-ads-conversion-create.md) - Create a website conversion action
+      - [gog ads conversion secondary](gog-ads-conversion-secondary.md) - Make one conversion action secondary (non-biddable)
     - [gog ads customers](gog-ads-customers.md) - List directly accessible Google Ads customers
+    - [gog ads experiment](gog-ads-experiment.md) - Schedule Google Ads experiments
+      - [gog ads experiment schedule](gog-ads-experiment-schedule.md) - Validate or schedule an existing experiment (may start serving)
     - [gog ads fields](gog-ads-fields.md) - Inspect a Google Ads resource or field
+    - [gog ads goal](gog-ads-goal.md) - Manage Google Ads customer conversion goals
+      - [gog ads goal disable](gog-ads-goal-disable.md) - Make one customer conversion goal non-biddable
+    - [gog ads mutate](gog-ads-mutate.md) - Validate or apply a Google Ads mutation request from a JSON file
     - [gog ads query](gog-ads-query.md) - Run a read-only Google Ads Query Language query
   - [gog analytics](gog-analytics.md) - Google Analytics
     - [gog analytics accounts](gog-analytics-accounts.md) - List GA4 account summaries

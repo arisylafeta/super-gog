@@ -25,10 +25,18 @@ Generated from `gog schema --json`.
   - [`gog ads <command> [flags]`](commands/gog-ads.md) - Google Ads reporting and guarded account setup
     - [`gog ads account (client) <command>`](commands/gog-ads-account.md) - Manage Google Ads client accounts
       - [`gog ads account (client) create --name=STRING --currency-code=STRING --time-zone=STRING <managerCustomerId> [flags]`](commands/gog-ads-account-create.md) - Create a client account beneath a manager
+    - [`gog ads campaign (campaigns) <command>`](commands/gog-ads-campaign.md) - Manage Google Ads campaigns
+      - [`gog ads campaign (campaigns) pause <customerId> <campaignId> [flags]`](commands/gog-ads-campaign-pause.md) - Pause one campaign
     - [`gog ads conversion (conversions) <command>`](commands/gog-ads-conversion.md) - Manage Google Ads website conversion actions
       - [`gog ads conversion (conversions) create --name=STRING --category=STRING <customerId> [flags]`](commands/gog-ads-conversion-create.md) - Create a website conversion action
+      - [`gog ads conversion (conversions) secondary <customerId> <conversionActionId> [flags]`](commands/gog-ads-conversion-secondary.md) - Make one conversion action secondary (non-biddable)
     - [`gog ads customers (accounts) [flags]`](commands/gog-ads-customers.md) - List directly accessible Google Ads customers
+    - [`gog ads experiment <command>`](commands/gog-ads-experiment.md) - Schedule Google Ads experiments
+      - [`gog ads experiment schedule <customerId> <experimentId> [flags]`](commands/gog-ads-experiment-schedule.md) - Validate or schedule an existing experiment (may start serving)
     - [`gog ads fields (field) <resourceOrField> [flags]`](commands/gog-ads-fields.md) - Inspect a Google Ads resource or field
+    - [`gog ads goal (goals) <command>`](commands/gog-ads-goal.md) - Manage Google Ads customer conversion goals
+      - [`gog ads goal (goals) disable --category=STRING --origin=STRING <customerId> [flags]`](commands/gog-ads-goal-disable.md) - Make one customer conversion goal non-biddable
+    - [`gog ads mutate --service=STRING --body-file=STRING <customerId> [flags]`](commands/gog-ads-mutate.md) - Validate or apply a Google Ads mutation request from a JSON file
     - [`gog ads query (search,report) --gaql=STRING <customerId> [flags]`](commands/gog-ads-query.md) - Run a read-only Google Ads Query Language query
   - [`gog analytics (ga) <command> [flags]`](commands/gog-analytics.md) - Google Analytics
     - [`gog analytics (ga) accounts (list,ls) [flags]`](commands/gog-analytics-accounts.md) - List GA4 account summaries

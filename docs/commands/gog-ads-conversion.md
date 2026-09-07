@@ -17,6 +17,7 @@ gog ads conversion (conversions) <command>
 ## Subcommands
 
 - [gog ads conversion create](gog-ads-conversion-create.md) - Create a website conversion action
+- [gog ads conversion secondary](gog-ads-conversion-secondary.md) - Make one conversion action secondary (non-biddable)
 
 ## Flags
 

@@ -1,30 +1,22 @@
-# `gog ads`
+# `gog ads campaign`
 
 > Generated from `gog schema --json`. Do not edit this page by hand; run `make docs-commands`.
 
-Google Ads reporting and guarded account setup
+Manage Google Ads campaigns
 
 ## Usage
 
 ```bash
-gog ads <command> [flags]
+gog ads campaign (campaigns) <command>
 ```
 
 ## Parent
 
-- [gog](gog.md)
+- [gog ads](gog-ads.md)
 
 ## Subcommands
 
-- [gog ads account](gog-ads-account.md) - Manage Google Ads client accounts
-- [gog ads campaign](gog-ads-campaign.md) - Manage Google Ads campaigns
-- [gog ads conversion](gog-ads-conversion.md) - Manage Google Ads website conversion actions
-- [gog ads customers](gog-ads-customers.md) - List directly accessible Google Ads customers
-- [gog ads experiment](gog-ads-experiment.md) - Schedule Google Ads experiments
-- [gog ads fields](gog-ads-fields.md) - Inspect a Google Ads resource or field
-- [gog ads goal](gog-ads-goal.md) - Manage Google Ads customer conversion goals
-- [gog ads mutate](gog-ads-mutate.md) - Validate or apply a Google Ads mutation request from a JSON file
-- [gog ads query](gog-ads-query.md) - Run a read-only Google Ads Query Language query
+- [gog ads campaign pause](gog-ads-campaign-pause.md) - Pause one campaign
 
 ## Flags
 
@@ -54,5 +46,5 @@ gog ads <command> [flags]
 
 ## See Also
 
-- [gog](gog.md)
+- [gog ads](gog-ads.md)
 - [Command index](README.md)

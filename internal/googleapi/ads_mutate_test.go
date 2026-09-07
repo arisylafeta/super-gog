@@ -140,3 +140,19 @@ func TestAdsScheduleExperiment(t *testing.T) {
 		t.Fatalf("readonly: %v", err)
 	}
 }
+
+func TestAdsGoalMutationsOmitUnsupportedPartialFailure(t *testing.T) {
+	t.Parallel()
+	for _, service := range []string{"customConversionGoals", "conversionGoalCampaignConfigs"} {
+		request, err := PrepareAdsMutation(service, []byte(`{"operations":[{"update":{"resourceName":"test"}}],"partialFailure":true}`), false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, exists := request["partialFailure"]; exists {
+			t.Errorf("%s includes unsupported partialFailure", service)
+		}
+		if string(request["validateOnly"]) != "true" {
+			t.Error("validation default lost")
+		}
+	}
+}
