@@ -2,7 +2,7 @@
 
 Every `gog` command has a generated docs page. The source of truth is the live CLI schema; run `make docs-commands` after changing command names, flags, help text, aliases, or arguments.
 
-Generated pages: 725.
+Generated pages: 726.
 
 ## Top-level Commands
 
@@ -81,9 +81,10 @@ Generated pages: 725.
       - [gog ads account create](gog-ads-account-create.md) - Create a client account beneath a manager
     - [gog ads campaign](gog-ads-campaign.md) - Manage Google Ads campaigns
       - [gog ads campaign pause](gog-ads-campaign-pause.md) - Pause one campaign
-    - [gog ads conversion](gog-ads-conversion.md) - Manage Google Ads website conversion actions
+    - [gog ads conversion](gog-ads-conversion.md) - Manage Google Ads conversion actions and click conversion uploads
       - [gog ads conversion create](gog-ads-conversion-create.md) - Create a website conversion action
       - [gog ads conversion secondary](gog-ads-conversion-secondary.md) - Make one conversion action secondary (non-biddable)
+      - [gog ads conversion upload-clicks](gog-ads-conversion-upload-clicks.md) - Validate or upload offline click conversions (gclid, gbraid or wbraid)
     - [gog ads customers](gog-ads-customers.md) - List directly accessible Google Ads customers
     - [gog ads experiment](gog-ads-experiment.md) - Schedule Google Ads experiments
       - [gog ads experiment schedule](gog-ads-experiment-schedule.md) - Validate or schedule an existing experiment (may start serving)

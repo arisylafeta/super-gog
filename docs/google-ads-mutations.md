@@ -33,3 +33,16 @@ To validate scheduling an existing experiment, use
 confirmation to schedule it. Scheduling can start serving and spending; an
 operation receipt does not prove that setup has finished. Query the experiment
 status and campaigns to verify completion before claiming it is running.
+
+## Offline click conversions
+
+`gog ads conversion upload-clicks CUSTOMER_ID --body-file=FILE` validates an
+`UploadClickConversions` request; add `--apply` (with `--force` in non-interactive
+use) to upload. Each conversion needs exactly one of `gclid`, `gbraid` or `wbraid`,
+a `conversionAction` resource in the same customer, `conversionDateTime` and an
+`orderId`. Only `conversionValue` and `currencyCode` may be added; user identifiers
+are refused. Partial failure is always on, as Google requires, so read per-row
+errors in `response.partialFailureError`. Google drops a repeated `orderId` for the
+same action, so a re-upload of the same conversion does not double count. Applied
+uploads do not retry automatically. The conversion action must be an upload-type
+(`UPLOAD_CLICKS`) action; create it with `gog ads mutate --service=googleAds`.

@@ -18,7 +18,7 @@ gog ads <command> [flags]
 
 - [gog ads account](gog-ads-account.md) - Manage Google Ads client accounts
 - [gog ads campaign](gog-ads-campaign.md) - Manage Google Ads campaigns
-- [gog ads conversion](gog-ads-conversion.md) - Manage Google Ads website conversion actions
+- [gog ads conversion](gog-ads-conversion.md) - Manage Google Ads conversion actions and click conversion uploads
 - [gog ads customers](gog-ads-customers.md) - List directly accessible Google Ads customers
 - [gog ads experiment](gog-ads-experiment.md) - Schedule Google Ads experiments
 - [gog ads fields](gog-ads-fields.md) - Inspect a Google Ads resource or field

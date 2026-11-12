@@ -2,7 +2,7 @@
 
 > Generated from `gog schema --json`. Do not edit this page by hand; run `make docs-commands`.
 
-Manage Google Ads website conversion actions
+Manage Google Ads conversion actions and click conversion uploads
 
 ## Usage
 
@@ -18,6 +18,7 @@ gog ads conversion (conversions) <command>
 
 - [gog ads conversion create](gog-ads-conversion-create.md) - Create a website conversion action
 - [gog ads conversion secondary](gog-ads-conversion-secondary.md) - Make one conversion action secondary (non-biddable)
+- [gog ads conversion upload-clicks](gog-ads-conversion-upload-clicks.md) - Validate or upload offline click conversions (gclid, gbraid or wbraid)
 
 ## Flags
 

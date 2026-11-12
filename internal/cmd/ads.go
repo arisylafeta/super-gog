@@ -21,7 +21,7 @@ type AdsCmd struct {
 	Query      AdsQueryCmd      `cmd:"" name:"query" aliases:"search,report" help:"Run a read-only Google Ads Query Language query"`
 	Account    AdsAccountCmd    `cmd:"" name:"account" aliases:"client" help:"Manage Google Ads client accounts"`
 	Campaign   AdsCampaignCmd   `cmd:"" name:"campaign" aliases:"campaigns" help:"Manage Google Ads campaigns"`
-	Conversion AdsConversionCmd `cmd:"" name:"conversion" aliases:"conversions" help:"Manage Google Ads website conversion actions"`
+	Conversion AdsConversionCmd `cmd:"" name:"conversion" aliases:"conversions" help:"Manage Google Ads conversion actions and click conversion uploads"`
 	Goal       AdsGoalCmd       `cmd:"" name:"goal" aliases:"goals" help:"Manage Google Ads customer conversion goals"`
 }
 
@@ -204,8 +204,9 @@ func (c *AdsAccountCreateCmd) Run(ctx context.Context, flags *RootFlags) error {
 }
 
 type AdsConversionCmd struct {
-	Create    AdsConversionCreateCmd    `cmd:"" help:"Create a website conversion action"`
-	Secondary AdsConversionSecondaryCmd `cmd:"" help:"Make one conversion action secondary (non-biddable)"`
+	Create       AdsConversionCreateCmd       `cmd:"" help:"Create a website conversion action"`
+	Secondary    AdsConversionSecondaryCmd    `cmd:"" help:"Make one conversion action secondary (non-biddable)"`
+	UploadClicks AdsConversionUploadClicksCmd `cmd:"" name:"upload-clicks" help:"Validate or upload offline click conversions (gclid, gbraid or wbraid)"`
 }
 
 type AdsConversionSecondaryCmd struct {

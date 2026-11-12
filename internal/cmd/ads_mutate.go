@@ -112,3 +112,53 @@ func (c *AdsExperimentScheduleCmd) Run(ctx context.Context, flags *RootFlags) er
 
 	return outfmt.WriteJSON(ctx, stdoutWriter(ctx), map[string]any{"customerId": id, "experimentId": experiment, "validatedOnly": !c.Apply, "response": response})
 }
+
+type AdsConversionUploadClicksCmd struct {
+	AdsConnectionFlags `embed:""`
+	CustomerID         string `arg:"" name:"customerId" help:"Google Ads client customer ID"`
+	BodyFile           string `name:"body-file" required:"" help:"JSON {\"conversions\":[...]} with one click id, conversionAction, conversionDateTime and orderId each; validated by default"`
+	Apply              bool   `name:"apply" help:"Upload instead of validation only; requires confirmation"`
+}
+
+func (c *AdsConversionUploadClicksCmd) Run(ctx context.Context, flags *RootFlags) error {
+	id, err := googleapi.NormalizeAdsCustomerID(c.CustomerID)
+	if err != nil {
+		return usage(err.Error())
+	}
+
+	body, err := os.ReadFile(c.BodyFile)
+	if err != nil {
+		return fmt.Errorf("read upload file: %w", err)
+	}
+
+	request, err := googleapi.PrepareClickConversionUpload(id, body, c.Apply)
+	if err != nil {
+		return usage(err.Error())
+	}
+
+	if dryRunErr := dryRunExit(ctx, flags, "ads.conversion.upload-clicks", map[string]any{"customerId": id, "request": request}); dryRunErr != nil {
+		return dryRunErr
+	}
+
+	if googleapi.ReadOnly(ctx) {
+		return fmt.Errorf("%w: Google Ads click conversion upload", googleapi.ErrReadOnly)
+	}
+
+	if c.Apply {
+		if confirmErr := confirmDestructiveChecked(ctx, flags, "upload Google Ads click conversions for customer "+id); confirmErr != nil {
+			return confirmErr
+		}
+	}
+
+	client, err := requireAdsClient(ctx, flags, c.AdsConnectionFlags)
+	if err != nil {
+		return err
+	}
+
+	response, err := client.UploadClickConversions(ctx, id, body, c.Apply)
+	if err != nil {
+		return err
+	}
+
+	return outfmt.WriteJSON(ctx, stdoutWriter(ctx), map[string]any{"customerId": id, "validatedOnly": !c.Apply, "response": response})
+}
