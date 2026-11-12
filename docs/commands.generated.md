@@ -30,7 +30,7 @@ Generated from `gog schema --json`.
     - [`gog ads conversion (conversions) <command>`](commands/gog-ads-conversion.md) - Manage Google Ads conversion actions and click conversion uploads
       - [`gog ads conversion (conversions) create --name=STRING --category=STRING <customerId> [flags]`](commands/gog-ads-conversion-create.md) - Create a website conversion action
       - [`gog ads conversion (conversions) secondary <customerId> <conversionActionId> [flags]`](commands/gog-ads-conversion-secondary.md) - Make one conversion action secondary (non-biddable)
-      - [`gog ads conversion (conversions) upload-clicks --body-file=STRING <customerId> [flags]`](commands/gog-ads-conversion-upload-clicks.md) - Validate or upload offline click conversions (gclid, gbraid or wbraid)
+      - [`gog ads conversion (conversions) upload-clicks --conversion-action-id=STRING --body-file=STRING <customerId> [flags]`](commands/gog-ads-conversion-upload-clicks.md) - Validate or upload offline click conversions (gclid, gbraid or wbraid)
     - [`gog ads customers (accounts) [flags]`](commands/gog-ads-customers.md) - List directly accessible Google Ads customers
     - [`gog ads experiment <command>`](commands/gog-ads-experiment.md) - Schedule Google Ads experiments
       - [`gog ads experiment schedule <customerId> <experimentId> [flags]`](commands/gog-ads-experiment-schedule.md) - Validate or schedule an existing experiment (may start serving)

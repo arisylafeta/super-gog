@@ -31,6 +31,7 @@ type AdsConfig struct {
 
 type AdsClient struct {
 	baseURL         string
+	dataManagerURL  string
 	client          *http.Client
 	developerToken  string
 	loginCustomerID string
@@ -43,6 +44,15 @@ func WithAdsBaseURL(baseURL string) AdsClientOption {
 	return func(client *AdsClient) {
 		if value := strings.TrimSpace(baseURL); value != "" {
 			client.baseURL = strings.TrimRight(value, "/")
+		}
+	}
+}
+
+// WithDataManagerURL overrides the Data Manager events:ingest endpoint (tests).
+func WithDataManagerURL(endpoint string) AdsClientOption {
+	return func(client *AdsClient) {
+		if value := strings.TrimSpace(endpoint); value != "" {
+			client.dataManagerURL = value
 		}
 	}
 }
@@ -72,6 +82,7 @@ func NewAdsClient(client *http.Client, config AdsConfig, opts ...AdsClientOption
 
 	adsClient := &AdsClient{
 		baseURL:         defaultAdsBaseURL,
+		dataManagerURL:  defaultDataManagerURL,
 		client:          client,
 		developerToken:  developerToken,
 		loginCustomerID: loginCustomerID,

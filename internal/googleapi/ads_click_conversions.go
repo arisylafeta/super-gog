@@ -1,31 +1,52 @@
 package googleapi
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
-	"regexp"
-	"strings"
 )
+
+const defaultDataManagerURL = "https://datamanager.googleapis.com/v1/events:ingest"
 
 var errAdsClickUpload = errors.New("invalid Google Ads click conversion upload")
 
-// Fields a click conversion may carry. Anything else (for example user identifiers)
-// is refused, so an upload can only ever send a click id, the action, time, value
-// and the order id used for deduplication.
-var allowedClickConversionFields = map[string]bool{
-	"gclid": true, "gbraid": true, "wbraid": true,
-	"conversionAction": true, "conversionDateTime": true,
-	"conversionValue": true, "currencyCode": true, "orderId": true,
+// Fields an offline click conversion event may carry. Anything else (user data,
+// device info, cart data) is refused, so an upload only ever sends a click id, the
+// time, value and the transaction id Google uses for deduplication.
+var allowedClickEventFields = map[string]bool{
+	"adIdentifiers": true, "eventTimestamp": true, "transactionId": true,
+	"conversionValue": true, "currency": true, "eventSource": true,
 }
 
-var conversionActionResource = regexp.MustCompile(`^customers/\d+/conversionActions/\d+$`)
+var allowedClickIdentifiers = map[string]bool{"gclid": true, "gbraid": true, "wbraid": true}
 
-// PrepareClickConversionUpload checks an UploadClickConversions request and owns its
-// flags: validation only unless apply, and partial failure on (Google requires it).
-func PrepareClickConversionUpload(customerID string, body []byte, apply bool) (map[string]json.RawMessage, error) {
+var allowedConsentStatus = map[string]bool{"CONSENT_GRANTED": true, "CONSENT_DENIED": true}
+
+// ClickConversionDestination is the Google Ads conversion action receiving the events.
+type ClickConversionDestination struct {
+	CustomerID         string
+	LoginCustomerID    string
+	ConversionActionID string
+}
+
+// PrepareClickConversionUpload turns {"events":[...], "consent":{...}} into a Data
+// Manager API events:ingest request for one Google Ads conversion action. Google
+// limits Google Ads API click uploads to existing integrations; new ones use this API.
+func PrepareClickConversionUpload(destination ClickConversionDestination, body []byte, apply bool) (map[string]any, error) {
+	customerID, err := NormalizeAdsCustomerID(destination.CustomerID)
+	if err != nil {
+		return nil, err
+	}
+
+	actionID, err := NormalizeAdsCustomerID(destination.ConversionActionID)
+	if err != nil {
+		return nil, fmt.Errorf("conversion action ID: %w", err)
+	}
+
 	var request map[string]json.RawMessage
 	if err := json.Unmarshal(body, &request); err != nil {
 		return nil, fmt.Errorf("decode upload JSON: %w", err)
@@ -36,73 +57,109 @@ func PrepareClickConversionUpload(customerID string, body []byte, apply bool) (m
 	}
 
 	for key := range request {
-		if key != "conversions" && key != "validateOnly" && key != "partialFailure" {
+		if key != "events" && key != "consent" {
 			return nil, fmt.Errorf("%w: unsupported field %q", errAdsClickUpload, key)
 		}
 	}
 
-	var conversions []map[string]json.RawMessage
-	if err := json.Unmarshal(request["conversions"], &conversions); err != nil || len(conversions) == 0 {
-		return nil, fmt.Errorf("%w: conversions must be a nonempty array", errAdsClickUpload)
+	var events []map[string]json.RawMessage
+	if err := json.Unmarshal(request["events"], &events); err != nil || len(events) == 0 {
+		return nil, fmt.Errorf("%w: events must be a nonempty array", errAdsClickUpload)
 	}
 
-	if len(conversions) > 2000 {
-		return nil, fmt.Errorf("%w: exceeds 2000 conversions", errAdsClickUpload)
+	if len(events) > 2000 {
+		return nil, fmt.Errorf("%w: exceeds 2000 events", errAdsClickUpload)
 	}
 
-	for index, conversion := range conversions {
-		clickIDs := 0
+	for index, event := range events {
+		if err := checkClickEvent(event); err != nil {
+			return nil, fmt.Errorf("%w: event %d %w", errAdsClickUpload, index, err)
+		}
+	}
 
-		for key := range conversion {
-			if !allowedClickConversionFields[key] {
-				return nil, fmt.Errorf("%w: conversion %d has unsupported field %q", errAdsClickUpload, index, key)
+	prepared := map[string]any{
+		"destinations": []map[string]any{clickDestination(customerID, destination.LoginCustomerID, actionID)},
+		"events":       request["events"],
+		"validateOnly": !apply,
+	}
+
+	if consent, ok := request["consent"]; ok {
+		var fields map[string]string
+		if err := json.Unmarshal(consent, &fields); err != nil {
+			return nil, fmt.Errorf("%w: consent must be an object", errAdsClickUpload)
+		}
+
+		for key, value := range fields {
+			if (key != "adUserData" && key != "adPersonalization") || !allowedConsentStatus[value] {
+				return nil, fmt.Errorf("%w: unsupported consent %q", errAdsClickUpload, key)
 			}
-
-			if key == "gclid" || key == "gbraid" || key == "wbraid" {
-				clickIDs++
-			}
 		}
 
-		if clickIDs != 1 {
-			return nil, fmt.Errorf("%w: conversion %d needs exactly one of gclid, gbraid or wbraid", errAdsClickUpload, index)
-		}
-
-		var action, at, order string
-		if json.Unmarshal(conversion["conversionAction"], &action) != nil || !conversionActionResource.MatchString(action) {
-			return nil, fmt.Errorf("%w: conversion %d needs conversionAction customers/<id>/conversionActions/<id>", errAdsClickUpload, index)
-		}
-
-		if !strings.HasPrefix(action, "customers/"+customerID+"/") {
-			return nil, fmt.Errorf("%w: conversion %d targets another customer", errAdsClickUpload, index)
-		}
-
-		if json.Unmarshal(conversion["conversionDateTime"], &at) != nil || at == "" {
-			return nil, fmt.Errorf("%w: conversion %d needs conversionDateTime", errAdsClickUpload, index)
-		}
-
-		if json.Unmarshal(conversion["orderId"], &order) != nil || order == "" {
-			return nil, fmt.Errorf("%w: conversion %d needs orderId for deduplication", errAdsClickUpload, index)
-		}
+		prepared["consent"] = fields
 	}
 
-	request["validateOnly"] = json.RawMessage("true")
-	if apply {
-		request["validateOnly"] = json.RawMessage("false")
-	}
-	request["partialFailure"] = json.RawMessage("true")
-
-	return request, nil
+	return prepared, nil
 }
 
-// UploadClickConversions sends offline click conversions. Applied uploads are not
-// retried automatically; Google drops a repeated orderId for the same action.
-func (c *AdsClient) UploadClickConversions(ctx context.Context, customerID string, body []byte, apply bool) (json.RawMessage, error) {
-	id, err := NormalizeAdsCustomerID(customerID)
-	if err != nil {
-		return nil, err
+var (
+	errClickEventField       = errors.New("has an unsupported field")
+	errClickEventIdentifier  = errors.New("needs adIdentifiers with exactly one of gclid, gbraid or wbraid")
+	errClickEventTimestamp   = errors.New("needs eventTimestamp")
+	errClickEventTransaction = errors.New("needs transactionId for deduplication")
+)
+
+func checkClickEvent(event map[string]json.RawMessage) error {
+	for key := range event {
+		if !allowedClickEventFields[key] {
+			return fmt.Errorf("%w %q", errClickEventField, key)
+		}
 	}
 
-	request, err := PrepareClickConversionUpload(id, body, apply)
+	var identifiers map[string]string
+	if err := json.Unmarshal(event["adIdentifiers"], &identifiers); err != nil || len(identifiers) != 1 {
+		return errClickEventIdentifier
+	}
+
+	for key, value := range identifiers {
+		if !allowedClickIdentifiers[key] || value == "" {
+			return errClickEventIdentifier
+		}
+	}
+
+	var timestamp, transaction string
+	if json.Unmarshal(event["eventTimestamp"], &timestamp) != nil || timestamp == "" {
+		return errClickEventTimestamp
+	}
+
+	if json.Unmarshal(event["transactionId"], &transaction) != nil || transaction == "" {
+		return errClickEventTransaction
+	}
+
+	return nil
+}
+
+func clickDestination(customerID, loginCustomerID, actionID string) map[string]any {
+	destination := map[string]any{
+		"operatingAccount":     map[string]string{"accountType": "GOOGLE_ADS", "accountId": customerID},
+		"productDestinationId": actionID,
+	}
+
+	if login, err := NormalizeAdsCustomerID(loginCustomerID); err == nil && login != customerID {
+		destination["loginAccount"] = map[string]string{"accountType": "GOOGLE_ADS", "accountId": login}
+	}
+
+	return destination
+}
+
+// UploadClickConversions sends offline click conversions through the Data Manager API.
+// Applied uploads are not retried automatically; Google drops a repeated transactionId
+// for the same conversion action. A request is all-or-nothing (fast fail).
+func (c *AdsClient) UploadClickConversions(ctx context.Context, destination ClickConversionDestination, body []byte, apply bool) (json.RawMessage, error) {
+	if destination.LoginCustomerID == "" {
+		destination.LoginCustomerID = c.loginCustomerID
+	}
+
+	request, err := PrepareClickConversionUpload(destination, body, apply)
 	if err != nil {
 		return nil, err
 	}
@@ -114,8 +171,33 @@ func (c *AdsClient) UploadClickConversions(ctx context.Context, customerID strin
 	if apply {
 		ctx = WithoutRetries(ctx)
 	}
-	var response json.RawMessage
-	err = c.doJSON(ctx, http.MethodPost, c.endpoint("customers/"+id+":uploadClickConversions"), request, &response)
 
-	return response, err
+	encoded, err := json.Marshal(request)
+	if err != nil {
+		return nil, fmt.Errorf("encode Data Manager request: %w", err)
+	}
+
+	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, c.dataManagerURL, bytes.NewReader(encoded))
+	if err != nil {
+		return nil, fmt.Errorf("build Data Manager request: %w", err)
+	}
+
+	httpRequest.Header.Set("Content-Type", "application/json")
+
+	response, err := c.client.Do(httpRequest)
+	if err != nil {
+		return nil, fmt.Errorf("send Data Manager request: %w", err)
+	}
+	defer response.Body.Close()
+
+	responseBody, err := io.ReadAll(io.LimitReader(response.Body, maxAdsResponseBytes+1))
+	if err != nil {
+		return nil, fmt.Errorf("read Data Manager response: %w", err)
+	}
+
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return nil, adsAPIError(response.StatusCode, responseBody)
+	}
+
+	return json.RawMessage(responseBody), nil
 }

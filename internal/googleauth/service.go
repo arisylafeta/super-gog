@@ -265,10 +265,12 @@ var serviceInfoByService = map[Service]serviceInfo{
 		note:   "Search Analytics + sitemap management",
 	},
 	ServiceAds: {
-		scopes: []string{"https://www.googleapis.com/auth/adwords"},
+		// Data Manager carries offline click conversion uploads, which Google moved off
+		// the Google Ads API for new integrations.
+		scopes: []string{"https://www.googleapis.com/auth/adwords", "https://www.googleapis.com/auth/datamanager"},
 		user:   true,
-		apis:   []string{"Google Ads API"},
-		note:   "Read-only customer discovery, field metadata, and GAQL reporting",
+		apis:   []string{"Google Ads API", "Data Manager API"},
+		note:   "Customer discovery, GAQL reporting, guarded mutations and click conversion uploads",
 	},
 	ServiceGroups: {
 		scopes: []string{"https://www.googleapis.com/auth/cloud-identity.groups.readonly"},
@@ -332,7 +334,7 @@ var apiServiceIDsByService = map[Service][]string{
 	ServiceAppScript:     {"script.googleapis.com"},
 	ServiceAnalytics:     {"analyticsadmin.googleapis.com", "analyticsdata.googleapis.com"},
 	ServiceSearchConsole: {"searchconsole.googleapis.com"},
-	ServiceAds:           {"googleads.googleapis.com"},
+	ServiceAds:           {"googleads.googleapis.com", "datamanager.googleapis.com"},
 	ServiceGroups:        {"cloudidentity.googleapis.com"},
 	ServiceKeep:          {"keep.googleapis.com"},
 	ServiceAdmin:         {"admin.googleapis.com"},

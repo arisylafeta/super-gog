@@ -36,13 +36,19 @@ status and campaigns to verify completion before claiming it is running.
 
 ## Offline click conversions
 
-`gog ads conversion upload-clicks CUSTOMER_ID --body-file=FILE` validates an
-`UploadClickConversions` request; add `--apply` (with `--force` in non-interactive
-use) to upload. Each conversion needs exactly one of `gclid`, `gbraid` or `wbraid`,
-a `conversionAction` resource in the same customer, `conversionDateTime` and an
-`orderId`. Only `conversionValue` and `currencyCode` may be added; user identifiers
-are refused. Partial failure is always on, as Google requires, so read per-row
-errors in `response.partialFailureError`. Google drops a repeated `orderId` for the
-same action, so a re-upload of the same conversion does not double count. Applied
-uploads do not retry automatically. The conversion action must be an upload-type
-(`UPLOAD_CLICKS`) action; create it with `gog ads mutate --service=googleAds`.
+`gog ads conversion upload-clicks CUSTOMER_ID --conversion-action-id=ID --body-file=FILE`
+validates an upload through the Data Manager API (`events:ingest`); add `--apply` (with
+`--force` in non-interactive use) to send it. Google limits Google Ads API
+`UploadClickConversions` to existing integrations, so new ones use Data Manager.
+
+The file is `{"events":[...],"consent":{...}}`. Each event needs `adIdentifiers` with
+exactly one of `gclid`, `gbraid` or `wbraid`, an `eventTimestamp` and a `transactionId`;
+only `conversionValue`, `currency` and `eventSource` may be added. User data is refused.
+`consent` may set `adUserData` and `adPersonalization`. gog adds the destination: the
+customer, the login (manager) customer and the conversion action, which must be an
+upload-type (`UPLOAD_CLICKS`) action. A request is all-or-nothing. Google drops a
+repeated `transactionId` for the same action. Applied uploads do not retry automatically.
+
+Data Manager needs the `https://www.googleapis.com/auth/datamanager` scope, now part of
+the `ads` service, and the Data Manager API enabled in the OAuth client's Cloud project.
+Accounts authorized before this change must re-run `gog auth add <email> --services ads`.

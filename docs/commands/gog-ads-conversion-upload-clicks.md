@@ -7,7 +7,7 @@ Validate or upload offline click conversions (gclid, gbraid or wbraid)
 ## Usage
 
 ```bash
-gog ads conversion (conversions) upload-clicks --body-file=STRING <customerId> [flags]
+gog ads conversion (conversions) upload-clicks --conversion-action-id=STRING --body-file=STRING <customerId> [flags]
 ```
 
 ## Parent
@@ -22,9 +22,10 @@ gog ads conversion (conversions) upload-clicks --body-file=STRING <customerId> [
 | `-a`<br>`--account`<br>`--acct` | `string` |  | Account email, alias, or auto for authenticated Google API commands |
 | `--api-version` | `string` | v25 | Google Ads API version |
 | `--apply` | `bool` |  | Upload instead of validation only; requires confirmation |
-| `--body-file` | `string` |  | JSON {"conversions":[...]} with one click id, conversionAction, conversionDateTime and orderId each; validated by default |
+| `--body-file` | `string` |  | JSON {"events":[...],"consent":{...}}: each event has adIdentifiers (one of gclid, gbraid, wbraid), eventTimestamp and transactionId; validated by default |
 | `--client` | `string` |  | OAuth client name (selects stored credentials + token bucket) |
 | `--color` | `string` | auto | Color output: auto\|always\|never |
+| `--conversion-action-id` | `string` |  | Upload-type (UPLOAD_CLICKS) conversion action receiving the events |
 | `--disable-commands` | `string` |  | Comma-separated list of disabled commands; dot paths allowed |
 | `-n`<br>`--dry-run`<br>`--dryrun`<br>`--noop`<br>`--preview` | `bool` |  | Do not make changes; print intended actions and exit successfully |
 | `--enable-commands` | `string` |  | Comma-separated list of enabled command prefixes; dot paths allowed (restricts CLI) |

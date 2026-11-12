@@ -116,7 +116,8 @@ func (c *AdsExperimentScheduleCmd) Run(ctx context.Context, flags *RootFlags) er
 type AdsConversionUploadClicksCmd struct {
 	AdsConnectionFlags `embed:""`
 	CustomerID         string `arg:"" name:"customerId" help:"Google Ads client customer ID"`
-	BodyFile           string `name:"body-file" required:"" help:"JSON {\"conversions\":[...]} with one click id, conversionAction, conversionDateTime and orderId each; validated by default"`
+	ConversionActionID string `name:"conversion-action-id" required:"" help:"Upload-type (UPLOAD_CLICKS) conversion action receiving the events"`
+	BodyFile           string `name:"body-file" required:"" help:"JSON {\"events\":[...],\"consent\":{...}}: each event has adIdentifiers (one of gclid, gbraid, wbraid), eventTimestamp and transactionId; validated by default"`
 	Apply              bool   `name:"apply" help:"Upload instead of validation only; requires confirmation"`
 }
 
@@ -131,7 +132,13 @@ func (c *AdsConversionUploadClicksCmd) Run(ctx context.Context, flags *RootFlags
 		return fmt.Errorf("read upload file: %w", err)
 	}
 
-	request, err := googleapi.PrepareClickConversionUpload(id, body, c.Apply)
+	destination := googleapi.ClickConversionDestination{
+		CustomerID:         id,
+		LoginCustomerID:    firstNonEmpty(c.LoginCustomerID, firstNonEmptyEnv("GOG_ADS_LOGIN_CUSTOMER_ID", "GOOGLE_ADS_LOGIN_CUSTOMER_ID")),
+		ConversionActionID: c.ConversionActionID,
+	}
+
+	request, err := googleapi.PrepareClickConversionUpload(destination, body, c.Apply)
 	if err != nil {
 		return usage(err.Error())
 	}
@@ -155,7 +162,7 @@ func (c *AdsConversionUploadClicksCmd) Run(ctx context.Context, flags *RootFlags
 		return err
 	}
 
-	response, err := client.UploadClickConversions(ctx, id, body, c.Apply)
+	response, err := client.UploadClickConversions(ctx, destination, body, c.Apply)
 	if err != nil {
 		return err
 	}
